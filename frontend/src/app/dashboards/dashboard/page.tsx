@@ -1,45 +1,117 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import ProtectedRoute from '@/components/ProtectedRoute';
-import { useAuth } from '@/contexts/AuthContext';
-import api from '@/lib/api';
+import { useState, useEffect } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/contexts/AuthContext";
+import api from "@/lib/api";
 
-// Types
-type Site = { id: number, location_name: string, latitude: number, longitude: number };
-type Survey = { id: number, site_id: number, survey_date: string, status: string };
-type Observation = { id: number, survey_id: number, file_type: string, uploaded_at: string, processing_status: string };
+type Site = {
+  id: number;
+  location_name: string;
+  latitude: number;
+  longitude: number;
+};
 
-export default function ResearcherDashboard() {
+type Survey = {
+  id: number;
+  site_id: number;
+  survey_date: string;
+  status: string;
+};
+
+type Device = {
+  id: number;
+  site_id: number;
+  device_type: string;
+  serial_number: string;
+};
+
+type Observation = {
+  id: number;
+  survey_id: number;
+  file_type: string;
+  uploaded_at: string;
+  processing_status: string;
+};
+
+export default function UnifiedDashboard() {
+
   const { user, logout } = useAuth();
-  
-  // Data State
+
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Dashboard Data
+
   const [sites, setSites] = useState<Site[]>([]);
   const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
   const [observations, setObservations] = useState<Observation[]>([]);
 
-  // Form States
-  const [siteForm, setSiteForm] = useState({ location_name: '', latitude: '', longitude: '', habitat_type: '', protected_area: '', monitoring_device_type: '' });
-  const [surveyForm, setSurveyForm] = useState({ site_id: '', survey_date: '', notes: '' });
-  const [deviceForm, setDeviceForm] = useState({ site_id: '', device_type: 'camera_trap', serial: '' });
-  const [uploadForm, setUploadForm] = useState({ survey_id: '', file: null as File | null });
-
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  
-  // Fetch Initial Data
+  const [message, setMessage] = useState("");
+
+  // Site Form
+
+  const [siteForm, setSiteForm] = useState({
+    location_name: "",
+    latitude: "",
+    longitude: "",
+    habitat_type: "",
+    protected_area: "",
+    monitoring_device_type: "",
+  });
+
+  // Survey Form
+
+  const [surveyForm, setSurveyForm] = useState({
+    site_id: "",
+    survey_date: "",
+    notes: "",
+  });
+
+  // Device Form
+
+  const [deviceForm, setDeviceForm] = useState({
+    site_id: "",
+    device_type: "camera_trap",
+    serial: "",
+  });
+
+  // Upload Form
+
+  const [uploadForm, setUploadForm] = useState({
+    survey_id: "",
+    file: null as File | null,
+  });
+
+  // Load dashboard
+
   const fetchData = async () => {
     try {
-      const [sitesRes, surveysRes, obsRes] = await Promise.all([
-        api.get('/monitoring/sites'),
-        api.get('/monitoring/surveys'),
-        api.get('/observations')
+
+      const [
+        sitesRes,
+        surveysRes,
+        devicesRes,
+        obsRes
+      ] = await Promise.all([
+
+        api.get("/monitoring/sites"),
+        api.get("/monitoring/surveys"),
+        api.get("/monitoring/devices"),
+        api.get("/observations"),
+
       ]);
+
       setSites(sitesRes.data);
       setSurveys(surveysRes.data);
+      setDevices(devicesRes.data);
       setObservations(obsRes.data);
+
     } catch (err) {
-      console.error("Failed to load dashboard data", err);
+
+      console.error(err);
+
     }
   };
 
@@ -47,265 +119,952 @@ export default function ResearcherDashboard() {
     fetchData();
   }, []);
 
-  // Handlers
-  const handleCreateSite = async (e: React.FormEvent) => {
+  // Create Site
+
+  const handleCreateSite = async (
+    e: React.FormEvent
+  ) => {
+
     e.preventDefault();
+
     setLoading(true);
+
     try {
-      await api.post('/monitoring/sites', {
+
+      await api.post("/monitoring/sites", {
+
         ...siteForm,
+
         latitude: parseFloat(siteForm.latitude),
-        longitude: parseFloat(siteForm.longitude)
+
+        longitude: parseFloat(siteForm.longitude),
+
       });
-      setMessage('Site created successfully!');
+
+      setMessage("Monitoring Site Created");
+
       fetchData();
-      setSiteForm({ location_name: '', latitude: '', longitude: '', habitat_type: '', protected_area: '', monitoring_device_type: '' });
-    } catch (err) {
-      setMessage('Error creating site');
+
+      setSiteForm({
+
+        location_name: "",
+        latitude: "",
+        longitude: "",
+        habitat_type: "",
+        protected_area: "",
+        monitoring_device_type: "",
+
+      });
+
+    } catch {
+
+      setMessage("Unable to create site");
+
     }
+
     setLoading(false);
+
   };
 
-  const handleCreateSurvey = async (e: React.FormEvent) => {
+  // Register Survey
+
+  const handleCreateSurvey = async (
+    e: React.FormEvent
+  ) => {
+
     e.preventDefault();
+
     setLoading(true);
+
     try {
-      await api.post('/monitoring/surveys', {
+
+      await api.post("/monitoring/surveys", {
+
         ...surveyForm,
-        site_id: parseInt(surveyForm.site_id)
+
+        site_id: Number(surveyForm.site_id),
+
       });
-      setMessage('Survey registered successfully!');
+
+      setMessage("Survey Registered");
+
       fetchData();
-      setSurveyForm({ site_id: '', survey_date: '', notes: '' });
-    } catch (err) {
-      setMessage('Error creating survey');
+
+      setSurveyForm({
+
+        site_id: "",
+        survey_date: "",
+        notes: "",
+
+      });
+
+    } catch {
+
+      setMessage("Unable to register survey");
+
     }
+
     setLoading(false);
+
   };
 
-  const handleRegisterDevice = async (e: React.FormEvent) => {
+  // Register Device
+
+  const handleRegisterDevice = async (
+    e: React.FormEvent
+  ) => {
+
     e.preventDefault();
+
     setLoading(true);
+
     try {
-      await api.post('/monitoring/devices', {
+
+      await api.post("/monitoring/devices", {
+
         ...deviceForm,
-        site_id: parseInt(deviceForm.site_id)
+
+        site_id: Number(deviceForm.site_id),
+
       });
-      setMessage('Device registered successfully!');
-      setDeviceForm({ site_id: '', device_type: 'camera_trap', serial: '' });
-    } catch (err) {
-      setMessage('Error registering device (Serial might be duplicate)');
+
+      fetchData();
+
+      setMessage("Device Registered");
+
+      setDeviceForm({
+
+        site_id: "",
+        device_type: "camera_trap",
+        serial: "",
+
+      });
+
+    } catch {
+
+      setMessage("Unable to register device");
+
     }
+
     setLoading(false);
+
   };
 
-  const handleUpload = async (e: React.FormEvent) => {
+  // Upload Observation
+
+  const handleUpload = async (
+    e: React.FormEvent
+  ) => {
+
     e.preventDefault();
+
     if (!uploadForm.file || !uploadForm.survey_id) {
-      setMessage('Please select a survey and a file');
+
+      setMessage("Select survey and file");
+
       return;
+
     }
-    setLoading(true);
+
     const formData = new FormData();
-    formData.append('survey_id', uploadForm.survey_id);
-    formData.append('file', uploadForm.file);
+
+    formData.append(
+      "survey_id",
+      uploadForm.survey_id
+    );
+
+    formData.append(
+      "file",
+      uploadForm.file
+    );
+
+    setLoading(true);
 
     try {
-      await api.post('/observations/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      setMessage('File uploaded successfully!');
+
+      await api.post(
+
+        "/observations/upload",
+
+        formData,
+
+        {
+
+          headers: {
+
+            "Content-Type":
+              "multipart/form-data",
+
+          },
+
+        }
+
+      );
+
       fetchData();
-      setUploadForm({ survey_id: '', file: null });
-    } catch (err) {
-      setMessage('Error uploading file (check format/size)');
+
+      setMessage("Observation Uploaded");
+
+      setUploadForm({
+
+        survey_id: "",
+
+        file: null,
+
+      });
+
+    } catch {
+
+      setMessage("Upload Failed");
+
     }
+
     setLoading(false);
+
   };
+
+  const renderContent = () => {
+        switch (activeTab) {
+
+      case "dashboard":
+        return (
+
+          <>
+
+            {message && (
+              <div className="mb-6 rounded-lg bg-green-100 border border-green-300 p-4 text-green-800">
+                {message}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+              <div className="bg-white rounded-xl shadow p-6">
+                <h2 className="text-gray-500">Monitoring Sites</h2>
+                <p className="text-4xl font-bold text-green-700 mt-3">
+                  {sites.length}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow p-6">
+                <h2 className="text-gray-500">Surveys</h2>
+                <p className="text-4xl font-bold text-blue-700 mt-3">
+                  {surveys.length}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow p-6">
+                <h2 className="text-gray-500">Devices</h2>
+                <p className="text-4xl font-bold text-orange-600 mt-3">
+                  {devices.length}
+                </p>
+              </div>
+
+              <div className="bg-white rounded-xl shadow p-6">
+                <h2 className="text-gray-500">Observations</h2>
+                <p className="text-4xl font-bold text-purple-700 mt-3">
+                  {observations.length}
+                </p>
+              </div>
+
+            </div>
+
+          </>
+
+        );
+
+      case "sites":
+
+        return (
+
+          <div className="bg-white rounded-xl shadow p-8">
+
+            <h2 className="text-2xl font-bold mb-6">
+              Create Monitoring Site
+            </h2>
+
+            <form
+              onSubmit={handleCreateSite}
+              className="grid md:grid-cols-2 gap-4"
+            >
+
+              <input
+                placeholder="Location Name"
+                className="border rounded-lg p-3"
+                value={siteForm.location_name}
+                onChange={(e) =>
+                  setSiteForm({
+                    ...siteForm,
+                    location_name: e.target.value,
+                  })
+                }
+              />
+
+              <input
+                placeholder="Latitude"
+                className="border rounded-lg p-3"
+                value={siteForm.latitude}
+                onChange={(e) =>
+                  setSiteForm({
+                    ...siteForm,
+                    latitude: e.target.value,
+                  })
+                }
+              />
+
+              <input
+                placeholder="Longitude"
+                className="border rounded-lg p-3"
+                value={siteForm.longitude}
+                onChange={(e) =>
+                  setSiteForm({
+                    ...siteForm,
+                    longitude: e.target.value,
+                  })
+                }
+              />
+
+              <button
+                disabled={loading}
+                className="bg-green-700 text-white rounded-lg p-3"
+              >
+                Create Site
+              </button>
+
+            </form>
+
+            <hr className="my-8"/>
+
+            <h2 className="text-xl font-bold mb-4">
+              Existing Monitoring Sites
+            </h2>
+
+            <table className="w-full border">
+
+              <thead>
+
+                <tr className="bg-gray-100">
+
+                  <th className="border p-2">ID</th>
+                  <th className="border p-2">Location</th>
+                  <th className="border p-2">Latitude</th>
+                  <th className="border p-2">Longitude</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {sites.map(site => (
+
+                  <tr key={site.id}>
+
+                    <td className="border p-2">{site.id}</td>
+                    <td className="border p-2">{site.location_name}</td>
+                    <td className="border p-2">{site.latitude}</td>
+                    <td className="border p-2">{site.longitude}</td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        );
+
+      case "surveys":
+
+        return (
+
+          <div className="bg-white rounded-xl shadow p-8">
+
+            <h2 className="text-2xl font-bold mb-6">
+              Register Survey
+            </h2>
+
+            <form
+              onSubmit={handleCreateSurvey}
+              className="grid md:grid-cols-2 gap-4"
+            >
+
+              <select
+                className="border rounded-lg p-3"
+                value={surveyForm.site_id}
+                onChange={(e)=>
+                  setSurveyForm({
+                    ...surveyForm,
+                    site_id:e.target.value
+                  })
+                }
+              >
+
+                <option value="">Select Site</option>
+
+                {sites.map(site=>(
+                  <option
+                    key={site.id}
+                    value={site.id}
+                  >
+                    {site.location_name}
+                  </option>
+                ))}
+
+              </select>
+
+              <input
+                type="date"
+                className="border rounded-lg p-3"
+                value={surveyForm.survey_date}
+                onChange={(e)=>
+                  setSurveyForm({
+                    ...surveyForm,
+                    survey_date:e.target.value
+                  })
+                }
+              />
+
+              <textarea
+                placeholder="Survey Notes"
+                className="border rounded-lg p-3 md:col-span-2"
+                rows={4}
+                value={surveyForm.notes}
+                onChange={(e)=>
+                  setSurveyForm({
+                    ...surveyForm,
+                    notes:e.target.value
+                  })
+                }
+              />
+
+              <button
+                className="bg-blue-700 text-white rounded-lg p-3"
+              >
+                Register Survey
+              </button>
+
+            </form>
+
+            <hr className="my-8"/>
+
+            <table className="w-full border">
+
+              <thead>
+
+                <tr className="bg-gray-100">
+
+                  <th className="border p-2">ID</th>
+                  <th className="border p-2">Site</th>
+                  <th className="border p-2">Date</th>
+                  <th className="border p-2">Status</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {surveys.map(s=>(
+                  <tr key={s.id}>
+
+                    <td className="border p-2">{s.id}</td>
+                    <td className="border p-2">{s.site_id}</td>
+                    <td className="border p-2">{s.survey_date}</td>
+                    <td className="border p-2">{s.status}</td>
+
+                  </tr>
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        );
+              case "devices":
+
+        return (
+
+          <div className="bg-white rounded-xl shadow p-8">
+
+            <h2 className="text-2xl font-bold mb-6">
+              Register Device
+            </h2>
+
+            <form
+              onSubmit={handleRegisterDevice}
+              className="grid md:grid-cols-2 gap-4"
+            >
+
+              <select
+                className="border rounded-lg p-3"
+                value={deviceForm.site_id}
+                onChange={(e) =>
+                  setDeviceForm({
+                    ...deviceForm,
+                    site_id: e.target.value,
+                  })
+                }
+              >
+                <option value="">Select Site</option>
+
+                {sites.map((site) => (
+                  <option key={site.id} value={site.id}>
+                    {site.location_name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                className="border rounded-lg p-3"
+                value={deviceForm.device_type}
+                onChange={(e) =>
+                  setDeviceForm({
+                    ...deviceForm,
+                    device_type: e.target.value,
+                  })
+                }
+              >
+                <option value="camera_trap">Camera Trap</option>
+                <option value="audio_recorder">Audio Recorder</option>
+                <option value="drone">Drone</option>
+                <option value="satellite">Satellite</option>
+              </select>
+
+              <input
+                placeholder="Serial Number"
+                className="border rounded-lg p-3"
+                value={deviceForm.serial}
+                onChange={(e) =>
+                  setDeviceForm({
+                    ...deviceForm,
+                    serial: e.target.value,
+                  })
+                }
+              />
+
+              <button
+                className="bg-orange-600 text-white rounded-lg p-3"
+              >
+                Register Device
+              </button>
+
+            </form>
+
+            <hr className="my-8"/>
+
+            <h2 className="text-xl font-bold mb-4">
+              Registered Devices
+            </h2>
+
+            <table className="w-full border">
+
+              <thead>
+
+                <tr className="bg-gray-100">
+
+                  <th className="border p-2">ID</th>
+                  <th className="border p-2">Site</th>
+                  <th className="border p-2">Type</th>
+                  <th className="border p-2">Serial</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {devices.map((device) => (
+
+                  <tr key={device.id}>
+
+                    <td className="border p-2">{device.id}</td>
+                    <td className="border p-2">{device.site_id}</td>
+                    <td className="border p-2">{device.device_type}</td>
+                    <td className="border p-2">{device.serial_number}</td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        );
+
+      case "observations":
+
+        return (
+
+          <div className="bg-white rounded-xl shadow p-8">
+
+            <h2 className="text-2xl font-bold mb-6">
+              Upload Observation
+            </h2>
+
+            <form
+              onSubmit={handleUpload}
+              className="grid md:grid-cols-2 gap-4"
+            >
+
+              <select
+                className="border rounded-lg p-3"
+                value={uploadForm.survey_id}
+                onChange={(e)=>
+                  setUploadForm({
+                    ...uploadForm,
+                    survey_id:e.target.value
+                  })
+                }
+              >
+
+                <option value="">Select Survey</option>
+
+                {surveys.map((survey)=>(
+
+                  <option
+                    key={survey.id}
+                    value={survey.id}
+                  >
+                    Survey #{survey.id}
+                  </option>
+
+                ))}
+
+              </select>
+
+              <input
+                type="file"
+                className="border rounded-lg p-3"
+                onChange={(e)=>
+                  setUploadForm({
+                    ...uploadForm,
+                    file:e.target.files?.[0] || null
+                  })
+                }
+              />
+
+              <button
+                className="bg-purple-700 text-white rounded-lg p-3"
+              >
+                Upload Observation
+              </button>
+
+            </form>
+
+            <hr className="my-8"/>
+
+            <h2 className="text-xl font-bold mb-4">
+              Observation History
+            </h2>
+
+            <table className="w-full border">
+
+              <thead>
+
+                <tr className="bg-gray-100">
+
+                  <th className="border p-2">ID</th>
+                  <th className="border p-2">Survey</th>
+                  <th className="border p-2">Type</th>
+                  <th className="border p-2">Uploaded</th>
+                  <th className="border p-2">Status</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {observations.map((obs)=>(
+
+                  <tr key={obs.id}>
+
+                    <td className="border p-2">{obs.id}</td>
+
+                    <td className="border p-2">
+                      {obs.survey_id}
+                    </td>
+
+                    <td className="border p-2">
+                      {obs.file_type}
+                    </td>
+
+                    <td className="border p-2">
+                      {new Date(obs.uploaded_at).toLocaleDateString()}
+                    </td>
+
+                    <td className="border p-2">
+                      {obs.processing_status}
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        );
+
+      default:
+        return null;
+          }
+        };
+
+  const menuItems = [
+    { key: "dashboard", label: "🏠 Dashboard" },
+    { key: "sites", label: "📍 Monitoring Sites" },
+    { key: "surveys", label: "📝 Surveys" },
+    { key: "devices", label: "📷 Devices" },
+    { key: "observations", label: "🦁 Observations" },
+    { key: "administration", label: "👤 Administration" },
+    { key: "forest", label: "🌳 Forest Officer" },
+    { key: "conservation", label: "🌿 Conservation Officer" },
+  ];
 
   return (
-    <ProtectedRoute allowedRoles={['Wildlife Researcher']}>
-      <div className="min-h-screen bg-slate-50 p-8 font-sans">
-        <div className="max-w-7xl mx-auto space-y-8">
-          
-          {/* Header */}
-          <div className="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+    <ProtectedRoute
+      allowedRoles={[
+        "Wildlife Researcher",
+        "Conservation Officer",
+        "Forest Department Officer",
+        "Administrator",
+      ]}
+    >
+      <div className="min-h-screen flex bg-gray-100">
+
+        {/* Sidebar */}
+
+        <aside className="w-72 bg-green-900 text-white">
+
+          <div className="p-6 border-b border-green-700">
+
+            <h1 className="text-2xl font-bold">
+              Wildlife Population Intelligence System
+            </h1>
+
+            <p className="text-green-200 mt-3">
+              {user?.name}
+            </p>
+
+            <p className="text-sm text-green-300">
+              {user?.role}
+            </p>
+
+          </div>
+
+          <nav className="p-4">
+
+            {menuItems.map((item) => (
+
+              <button
+
+                key={item.key}
+
+                onClick={() => setActiveTab(item.key)}
+
+                className={`w-full text-left px-5 py-3 rounded-lg mb-2 transition
+
+                ${
+                  activeTab === item.key
+                    ? "bg-green-600"
+                    : "hover:bg-green-800"
+                }`}
+
+              >
+
+                {item.label}
+
+              </button>
+
+            ))}
+
+          </nav>
+
+        </aside>
+
+        {/* Main */}
+
+        <div className="flex-1">
+
+          <header className="bg-white shadow px-8 py-6 flex justify-between items-center">
+
             <div>
-              <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Wildlife Population Intelligence System</h1>
-              <p className="text-slate-500 mt-1">Welcome back, {user?.name}</p>
-              <p className="text-emerald-700 font-semibold mt-1">Role: {user?.role}</p>
+
+              <h2 className="text-3xl font-bold text-green-700">
+
+                Wildlife Population Intelligence Dashboard
+
+              </h2>
+
+              <p className="text-gray-500 mt-2">
+
+                Unified Biodiversity Monitoring Platform
+
+              </p>
+
             </div>
-            <button onClick={logout} className="px-5 py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl font-medium transition-colors">
+
+            <button
+
+              onClick={logout}
+
+              className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
+
+            >
+
               Sign Out
+
             </button>
-          </div>
 
-          {/* Role-specific Section */}
-          {user?.role === "Administrator" && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-                <h2 className="text-xl font-bold text-blue-700">
-                    Administrator Panel
-                    </h2>
-                    <p>Manage users, datasets, monitoring sites, and system configuration.</p>
-                    </div>
-                )}
-          {user?.role === "Wildlife Researcher" && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-5">
-                <h2 className="text-xl font-bold text-green-700">Research Workspace</h2>
-                <p>Create sites, register surveys, upload wildlife observations, and analyze biodiversity data.</p>
-            </div>
-                )}
-          {user?.role === "Conservation Officer" && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-5">
-                <h2 className="text-xl font-bold text-yellow-700">Conservation Dashboard</h2>
-                <p>Monitor habitat health, biodiversity trends, and conservation status.</p>
-            </div>
-                )}
-          {user?.role === "Forest Department Officer" && (
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-5">
-                <h2 className="text-xl font-bold text-purple-700">Forest Department Panel</h2>
-                <p>Verify field observations, monitor protected areas, and oversee monitoring activities.</p>
-            </div>
-                )}
+          </header>
 
-          {message && (
-            <div className="p-4 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100 font-medium">
-              {message}
-            </div>
-          )}
+          <main className="p-8">
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Create Site Form */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Create Monitoring Site</h2>
-              <form onSubmit={handleCreateSite} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Location Name</label>
-                  <input required type="text" value={siteForm.location_name} onChange={e => setSiteForm({...siteForm, location_name: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Latitude</label>
-                    <input required type="number" step="any" value={siteForm.latitude} onChange={e => setSiteForm({...siteForm, latitude: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
+            {activeTab === "administration" && (
+
+              <div className="bg-white rounded-xl shadow p-8">
+
+                <h2 className="text-2xl font-bold mb-4">
+
+                  Administrator Panel
+
+                </h2>
+
+                <div className="grid grid-cols-4 gap-6">
+
+                  <div className="bg-blue-100 rounded-lg p-6">
+
+                    <h3>Total Users</h3>
+
+                    <p className="text-4xl font-bold mt-3">
+
+                      24
+
+                    </p>
+
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Longitude</label>
-                    <input required type="number" step="any" value={siteForm.longitude} onChange={e => setSiteForm({...siteForm, longitude: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
+
+                  <div className="bg-green-100 rounded-lg p-6">
+
+                    <h3>Researchers</h3>
+
+                    <p className="text-4xl font-bold mt-3">
+
+                      10
+
+                    </p>
+
                   </div>
-                </div>
-                <button disabled={loading} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors">Create Site</button>
-              </form>
-            </div>
 
-            {/* Create Survey Form */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Register Survey</h2>
-              <form onSubmit={handleCreateSurvey} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Select Site</label>
-                  <select required value={surveyForm.site_id} onChange={e => setSurveyForm({...surveyForm, site_id: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
-                    <option value="">-- Select a Site --</option>
-                    {sites.map(s => <option key={s.id} value={s.id}>{s.location_name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input required type="date" value={surveyForm.survey_date} onChange={e => setSurveyForm({...surveyForm, survey_date: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
-                  <textarea value={surveyForm.notes} onChange={e => setSurveyForm({...surveyForm, notes: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-                </div>
-                <button disabled={loading} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors">Register Survey</button>
-              </form>
-            </div>
+                  <div className="bg-yellow-100 rounded-lg p-6">
 
-            {/* Register Device Form */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Register Device</h2>
-              <form onSubmit={handleRegisterDevice} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Select Site</label>
-                  <select required value={deviceForm.site_id} onChange={e => setDeviceForm({...deviceForm, site_id: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
-                    <option value="">-- Select a Site --</option>
-                    {sites.map(s => <option key={s.id} value={s.id}>{s.location_name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Device Type</label>
-                  <select required value={deviceForm.device_type} onChange={e => setDeviceForm({...deviceForm, device_type: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
-                    <option value="camera_trap">Camera Trap</option>
-                    <option value="audio_sensor">Audio Sensor</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Serial Number</label>
-                  <input required type="text" value={deviceForm.serial} onChange={e => setDeviceForm({...deviceForm, serial: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" />
-                </div>
-                <button disabled={loading} type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors">Register Device</button>
-              </form>
-            </div>
+                    <h3>Forest Officers</h3>
 
-            {/* Upload File Form */}
-            <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-              <h2 className="text-xl font-bold text-slate-800 mb-6">Upload Observation File</h2>
-              <form onSubmit={handleUpload} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Select Survey</label>
-                  <select required value={uploadForm.survey_id} onChange={e => setUploadForm({...uploadForm, survey_id: e.target.value})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
-                    <option value="">-- Select a Survey --</option>
-                    {surveys.map(s => <option key={s.id} value={s.id}>Survey ID: {s.id} ({s.survey_date})</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">File (Image/Audio, max 50MB)</label>
-                  <input required type="file" accept="image/*,audio/*" onChange={e => setUploadForm({...uploadForm, file: e.target.files ? e.target.files[0] : null})} className="w-full px-4 py-2 text-slate-900 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100" />
-                </div>
-                <button disabled={loading} type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors">Upload File</button>
-              </form>
-            </div>
-          </div>
+                    <p className="text-4xl font-bold mt-3">
 
-          {/* Observations Table */}
-          <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <h2 className="text-xl font-bold text-slate-800 mb-6">My Observations</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-y border-slate-200 text-slate-600 text-sm">
-                    <th className="py-3 px-4 font-medium">ID</th>
-                    <th className="py-3 px-4 font-medium">Survey ID</th>
-                    <th className="py-3 px-4 font-medium">Type</th>
-                    <th className="py-3 px-4 font-medium">Date</th>
-                    <th className="py-3 px-4 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {observations.map(obs => (
-                    <tr key={obs.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                      <td className="py-3 px-4 text-slate-800">#{obs.id}</td>
-                      <td className="py-3 px-4 text-slate-600">{obs.survey_id}</td>
-                      <td className="py-3 px-4 text-slate-600 capitalize">{obs.file_type}</td>
-                      <td className="py-3 px-4 text-slate-600">{new Date(obs.uploaded_at).toLocaleDateString()}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${obs.processing_status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                          {obs.processing_status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {observations.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="py-8 text-center text-slate-500">No observations logged yet.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                      8
+
+                    </p>
+
+                  </div>
+
+                  <div className="bg-purple-100 rounded-lg p-6">
+
+                    <h3>Conservation Officers</h3>
+
+                    <p className="text-4xl font-bold mt-3">
+
+                      6
+
+                    </p>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            )}
+
+            {activeTab === "forest" && (
+
+              <div className="bg-white rounded-xl shadow p-8">
+
+                <h2 className="text-2xl font-bold mb-4">
+
+                  Forest Department Officer
+
+                </h2>
+
+                <ul className="list-disc ml-6 space-y-2">
+
+                  <li>Assigned Monitoring Sites</li>
+
+                  <li>Forest Patrol Records</li>
+
+                  <li>Incident Reports</li>
+
+                  <li>Camera Trap Status</li>
+
+                  <li>Protected Area Monitoring</li>
+
+                </ul>
+
+              </div>
+
+            )}
+
+            {activeTab === "conservation" && (
+
+              <div className="bg-white rounded-xl shadow p-8">
+
+                <h2 className="text-2xl font-bold mb-4">
+
+                  Conservation Officer
+
+                </h2>
+
+                <ul className="list-disc ml-6 space-y-2">
+
+                  <li>Habitat Health Overview</li>
+
+                  <li>Biodiversity Trends</li>
+
+                  <li>Species Distribution</li>
+
+                  <li>Conservation Alerts</li>
+
+                  <li>Population Monitoring Summary</li>
+
+                </ul>
+
+              </div>
+
+            )}
+
+            {!["administration", "forest", "conservation"].includes(activeTab) &&
+              renderContent()}
+
+          </main>
 
         </div>
+
       </div>
+
     </ProtectedRoute>
   );
+
 }

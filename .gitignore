@@ -1,0 +1,28 @@
+# Virtual Environments
+venv/
+env/
+
+# Node dependencies (Frontend)
+node_modules/
+frontend/node_modules/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Environment Secrets
+.env
+.env.*
+
+# Build Outputs
+dist/
+build/
+*.docx
+
+# Heavy / Sensitive files
+*.docx
+*.pdf
+dataset/csv/*.csv
+
+
+*.docx

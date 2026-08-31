@@ -1,0 +1,104 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+backend/venv/
+backend/.venv/
+venv/
+.venv/
+env/
+
+# =========================
+# Environment Variables
+# =========================
+.env
+.env.*
+
+# =========================
+# Python Cache
+# =========================
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Node.js
+# =========================
+node_modules/
+frontend/node_modules/
+
+# =========================
+# React Build
+# =========================
+dist/
+build/
+frontend/dist/
+frontend/build/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# VS Code / IDE
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Database
+# =========================
+*.db
+*.sqlite3
+
+# =========================
+# Uploaded Files
+# =========================
+backend/uploads/
+uploads/
+media/
+temp/
+
+# =========================
+# AI Model Files
+# =========================
+*.pt
+*.pth
+*.onnx
+*.h5
+*.keras
+*.pb
+
+# =========================
+# Large Datasets
+# =========================
+backend/datasets/
+
+# =========================
+# Processed Dataset Files
+# =========================
+datasets/processed/
+
+# =========================
+# Reports
+# =========================
+reports/
+*.pdf
+
+# =========================
+# ZIP Files
+# =========================
+*.zip
+.git-backup/

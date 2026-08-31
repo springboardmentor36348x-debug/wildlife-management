@@ -1,0 +1,338 @@
+/* ========================= */
+/* GLOBAL RESET */
+/* ========================= */
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  min-height: 100vh;
+  background-color: #f4f7f5; /* matches the light dashboard theme */
+}
+
+/* page background behind the login/register card only —
+   doesn't affect dashboard or home page, since those don't use .container */
+body:has(.container) {
+  background-color: #0b1220;
+}
+
+/* ========================= */
+/* HOME PAGE */
+/* ========================= */
+.home-container {
+  height: 100vh;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Dark overlay on image */
+.overlay {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 60px;
+  border-radius: 20px;
+  text-align: center;
+  color: white;
+  max-width: 650px;
+}
+
+.overlay h1 {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.overlay p {
+  font-size: 18px;
+  margin-bottom: 30px;
+}
+
+.home-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* Login / Register buttons in the hero overlay
+   — previously unstyled, so they fell back to
+   default browser button styling */
+.home-buttons button {
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.home-buttons button:first-child {
+  background: transparent;
+  border: 1.5px solid #14b8a6;
+  color: #14b8a6;
+}
+
+.home-buttons button:first-child:hover {
+  background: rgba(20, 184, 166, 0.1);
+}
+
+.home-buttons button:last-child {
+  background: #14b8a6;
+  border: none;
+  color: #06101a;
+}
+
+.home-buttons button:last-child:hover {
+  background: #0d9488;
+}
+
+/* ========================= */
+/* LOGIN & REGISTER */
+/* ========================= */
+.container {
+  max-width: 420px;
+  margin: 100px auto;
+  padding: 45px;
+  border-radius: 20px;
+  background: #1e293b;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+  color: #f1f5f9;
+  text-align: center;
+}
+
+.container h2 {
+  margin-bottom: 30px;
+  color: #14b8a6;
+}
+
+/* ========================= */
+/* DASHBOARD (legacy pages: Surveys, MonitoringSites, CameraTraps,   */
+/* AudioSensors, Observations, SpeciesCatalog) - now light-themed to */
+/* match the redesigned Dashboard/Sidebar instead of the old dark UI */
+/* ========================= */
+.dashboard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 28px 32px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid #e3e9e5;
+  box-shadow: 0 1px 2px rgba(16, 36, 27, 0.04), 0 8px 24px rgba(16, 36, 27, 0.05);
+  color: #16241d;
+}
+
+.dashboard-container h2,
+.dashboard-container h3 {
+  color: #16241d;
+}
+
+.dashboard-container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.dashboard-container ul li {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #e3e9e5;
+  margin-bottom: 8px;
+  background: #f0f4f1;
+  transition: 0.15s ease;
+}
+
+.dashboard-container ul li:hover {
+  border-color: #0f8a5f;
+  background: rgba(15, 138, 95, 0.08);
+}
+
+.dashboard-container hr {
+  border: none;
+  border-top: 1px solid #e3e9e5;
+  margin: 24px 0;
+}
+
+/* ========================= */
+/* INPUTS (scoped to login/register card only) */
+/* ========================= */
+.container input,
+.container select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  margin-bottom: 15px;
+  background: #0f172a;
+  color: white;
+  font-size: 14px;
+}
+
+.container input:focus,
+.container select:focus {
+  outline: none;
+  border-color: #14b8a6;
+}
+
+/* ========================= */
+/* BUTTONS (scoped to login/register card only) */
+/* ========================= */
+.container button {
+  padding: 12px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #14b8a6;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.container button:hover {
+  background: #0d9488;
+}
+
+/* ========================= */
+/* LINKS */
+/* ========================= */
+a {
+  color: #14b8a6;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.home-features {
+  padding: 80px 40px;
+  background: #0a0e14;
+  text-align: center;
+}
+
+.home-features h2 {
+  color: #fff;
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.home-features-subtitle {
+  color: #94a3b8;
+  max-width: 600px;
+  margin: 0 auto 48px;
+}
+
+.home-features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.home-feature-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 28px;
+  text-align: left;
+}
+
+.home-feature-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.home-feature-card h3 {
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.home-feature-card p {
+  color: #94a3b8;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.home-about {
+  padding: 60px 40px;
+  background: #060a10;
+  text-align: center;
+}
+
+.home-about h2 {
+  color: #fff;
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+.home-about p {
+  color: #94a3b8;
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.home-footer {
+  padding: 24px 40px;
+  border-top: 1px solid #1e293b;
+  color: #64748b;
+  font-size: 13px;
+  text-align: center;
+}
+.home-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 40px;
+  background: rgba(6, 10, 16, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #1e293b;
+}
+
+.home-navbar-brand {
+  color: #fff;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.home-navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.home-navbar-links button {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+
+.home-navbar-links button:hover {
+  color: #14b8a6;
+}
+
+.home-navbar-login,
+.home-navbar-register {
+  padding: 8px 18px !important;
+  border-radius: 6px !important;
+  font-weight: 600;
+}
+
+.home-navbar-login {
+  background: transparent !important;
+  border: 1px solid #14b8a6 !important;
+  color: #14b8a6 !important;
+}
+
+.home-navbar-register {
+  background: #14b8a6 !important;
+  color: #06101a !important;
+}

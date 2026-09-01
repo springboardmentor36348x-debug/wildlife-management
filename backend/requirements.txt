@@ -1,0 +1,29 @@
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+sqlalchemy==2.0.30
+psycopg2-binary==2.9.9
+pydantic==2.7.1
+pydantic-settings==2.2.1
+python-jose[cryptography]==3.3.0
+passlib==1.7.4
+bcrypt==4.0.1
+python-multipart==0.0.9
+alembic==1.13.1
+python-dotenv==1.0.1
+email-validator==2.1.1
+
+# Milestone 2 - Wildlife Image Analysis Engine (pretrained YOLOv8, inference only)
+ultralytics==8.2.103
+
+# Milestone 3 Feature A - Bioacoustic Recognition Engine (pretrained YAMNet, inference only)
+# NOTE: tensorflow-hub's model download needs outbound HTTPS to tfhub.dev /
+# storage.googleapis.com at first use - see MILESTONE3_NOTES.md if that's
+# blocked in your environment (e.g. a locked-down CI/sandbox).
+tensorflow==2.21.0
+tensorflow-hub==0.16.1
+librosa==1.0.0
+setuptools<81  # tensorflow-hub still imports pkg_resources, removed from setuptools>=81
+
+# Milestone 4 - Reports & Export System (PDF & Excel generation)
+reportlab==5.0.1
+openpyxl==3.1.5

@@ -80,8 +80,8 @@ Wildlife_Population_Intelligence_System/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/JaspinderKaurWalia26/wildlife-population-intelligence-system
-cd wildlife-population-intelligence-system
+git clone -b intern-jaspinder-kaur-walia https://github.com/springboardmentor36348x-debug/wildlife-management.git
+cd wildlife-management
 ```
 
 ### 2. Backend Setup

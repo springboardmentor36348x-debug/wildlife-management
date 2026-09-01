@@ -1,204 +1,168 @@
 # 🐾 Wildlife Population Intelligence System
 
-<p align="center">
-  <img src="https://img.shields.io/badge/AI-Wildlife%20Intelligence-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Frontend-React-blue?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Database-PostgreSQL-336791?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Language-Python-yellow?style=for-the-badge" />
-</p>
+## AI-Powered Wildlife Monitoring & Intelligence Platform
 
-<p align="center">
-  <b>AI-assisted wildlife monitoring, detection, analysis and reporting platform</b>
-</p>
+A full-stack web application that combines AI-based wildlife detection, audio analysis, population intelligence, analytics, detection history, authentication, and reporting into one platform.
 
 ---
 
-## 📌 Table of Contents
+## 🌿 Project Overview
 
-- [🌿 About the Project](#-about-the-project)
-- [🎯 Objectives](#-objectives)
-- [✨ Key Features](#-key-features)
-- [🔄 Application Workflow](#-application-workflow)
-- [🖥️ Application Screens](#️-application-screens)
-- [📊 Analytics](#-analytics)
-- [🔐 Authentication & Security](#-authentication--security)
-- [🧠 AI & Data Processing](#-ai--data-processing)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [📁 Project Structure](#-project-structure)
-- [📂 Datasets](#-datasets)
-- [⚙️ Installation](#️-installation)
-- [▶️ Running the Project](#️-running-the-project)
-- [📡 API Modules](#-api-modules)
-- [📈 Current Implementation](#-current-implementation)
-- [🔮 Future Scope](#-future-scope)
-- [🌍 Impact](#-impact)
-- [👥 Contribution](#-contribution)
-- [📄 License](#-license)
+The Wildlife Population Intelligence System provides a centralized platform for wildlife monitoring and analysis.
+
+It allows users to upload wildlife images and audio, process observations, store detection records, analyze wildlife datasets, and view useful insights through an interactive web application.
+
+**Core Flow:**
+
+User → Web Application → AI/Data Processing → Database → Analytics → Insights → Reports
 
 ---
 
-# 🌿 About the Project
+## ✨ Key Features
 
-The **Wildlife Population Intelligence System** is a full-stack web application designed to organize and analyze wildlife observations through a unified digital platform.
-
-The system connects:
-
-> **Wildlife Data → AI/Analysis → Database → History → Analytics → Reports**
-
-The platform provides workflows for wildlife image detection, audio analysis, observation history and analytics while providing a foundation for future population, biodiversity, habitat and conservation intelligence.
-
-The current implementation combines a **React frontend**, **FastAPI backend**, **PostgreSQL database**, AI-assisted image detection and audio signal analysis.
-
----
-
-# 🎯 Objectives
-
-| Objective | Description |
-|-----------|-------------|
-| 🐾 Wildlife Detection | Process wildlife images through an AI-based detection workflow |
-| 🎵 Audio Analysis | Analyze uploaded wildlife audio recordings |
-| 📊 Observation Analytics | Calculate total and animal-wise detection counts |
-| 🗂️ Detection History | Preserve wildlife observations as structured records |
-| 🔐 Secure Access | Provide registration, login and protected application access |
-| 📈 Data Visualization | Present wildlife information through application dashboards |
-| 📄 Reporting | Support review and reporting of wildlife observations |
-| 🌱 Future Intelligence | Provide a foundation for population, habitat and conservation analysis |
+| Feature | Description |
+|---|---|
+| 🐾 Wildlife Detection | AI-assisted detection and classification of wildlife from images |
+| 🎵 Audio Analysis | Processing and analysis of wildlife audio recordings |
+| 📊 Population Intelligence | Analysis of wildlife observations and species information |
+| 📈 Analytics | Detection counts, species statistics, and trends |
+| 🕘 Detection History | Storage and review of previous wildlife observations |
+| 🔐 Authentication | User registration, login, password security, and JWT authentication |
+| 📄 Reports | Structured wildlife observation and analysis information |
+| 🌿 Wildlife Data | Dataset-based species and population analysis |
 
 ---
 
-# ✨ Key Features
+## 🐾 Wildlife Detection
 
-### 🐾 1. Wildlife Image Detection
+The system processes uploaded wildlife images through the configured AI detection workflow.
 
-Upload wildlife images and process them through the configured AI inference workflow.
+The detection process can provide:
 
-**Supported formats:**
+- Animal/class prediction
+- Confidence information
+- Detection results
+- Observation records
+
+Supported image formats include:
 
 - JPG
 - JPEG
 - PNG
 
-The system processes the image and returns information such as:
-
-- Predicted animal/class
-- Confidence score
-- Detection information
-- Observation record
-
-The current image workflow uses the configured Roboflow inference service and wildlife detection model.
-
 ---
 
-### 🎵 2. Wildlife Audio Analysis
+## 🎵 Wildlife Audio Analysis
 
-The system supports wildlife audio uploads.
+The system supports wildlife audio uploads and signal analysis.
 
-**Supported formats:**
-
-- WAV
-- MP3
-
-The backend processes the audio using:
+Audio processing uses:
 
 - Librosa
 - NumPy
 - Signal-energy analysis
 
-The current implementation determines whether animal sound/presence is detected based on the configured threshold.
+Supported formats include:
 
-> **Note:** The current implementation is audio-presence analysis rather than species-level audio classification.
+- WAV
+- MP3
 
----
-
-### 📊 3. Wildlife Analytics
-
-The analytics module works with stored detection records.
-
-It provides:
-
-- Total detection count
-- Animal-wise detection counts
-- Detection history
-- Confidence information
-- Detection timestamps
-
-This allows stored observations to be converted into useful wildlife statistics.
+The current implementation focuses on detecting animal-sound presence rather than complete species-level audio classification.
 
 ---
 
-### 🗃️ 4. Detection History
+## 📊 Population Intelligence
 
-Previous wildlife observations can be maintained as structured records.
+The Population Intelligence module analyzes wildlife observation data and application detection records.
 
-Example information includes:
+It provides information such as:
 
-| Information | Example |
-|-------------|---------|
-| Image/File | wildlife_image.jpg |
-| Animal | Elephant |
-| Confidence | 92% |
-| Detection Time | Stored timestamp |
-| Observation | Wildlife detection |
-
-This creates a historical record that can later support more advanced analysis.
+- Total wildlife observations
+- Number of species
+- Wildlife group distribution
+- Top observed species
+- Application detection counts
+- Daily detection trends
 
 ---
 
-### 🔐 5. Authentication
+## 🕘 Detection History
 
-The application provides a secure authentication workflow.
+Wildlife detections are maintained as structured records.
 
-Features include:
+A detection record can contain information such as:
+
+- Animal
+- Confidence
+- Detection time
+- Observation details
+
+This allows previous observations to be reviewed and analyzed.
+
+---
+
+## 🔐 Authentication & Security
+
+The application includes an authentication system with:
 
 - User registration
-- Login
+- User login
 - Password hashing
 - JWT authentication
 - Protected application access
 
-Authentication is handled through the backend security layer.
+---
+
+## 🛠️ Technology Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React.js, JavaScript, Vite |
+| Backend | Python, FastAPI |
+| Database | PostgreSQL |
+| ORM | SQLAlchemy |
+| Image AI | Roboflow |
+| Audio Processing | Librosa, NumPy |
+| Authentication | JWT, Passlib |
+| Data | CSV Datasets |
+| Version Control | Git, GitHub |
 
 ---
 
-### 📄 6. Reporting
+## 📁 Project Structure
 
-The application includes reporting-related workflows for reviewing wildlife observations and analytical information.
-
-Reports can use information generated from:
-
-- Detection records
-- History
-- Analytics
-- Wildlife observations
-
----
-
-# 🔄 Application Workflow
-
-```mermaid
-flowchart LR
-
-A[👤 User] --> B[🔐 Login / Register]
-
-B --> C[🏠 Dashboard]
-
-C --> D[🐾 Wildlife Image]
-C --> E[🎵 Wildlife Audio]
-C --> F[📊 Analytics]
-C --> G[🕘 Detection History]
-C --> H[📄 Reports]
-
-D --> I[🤖 AI Image Processing]
-E --> J[🔊 Audio Signal Processing]
-
-I --> K[🗄️ Store Detection]
-J --> K
-
-K --> L[📊 Analytics]
-K --> M[🕘 History]
-
-L --> N[📈 Insights]
-M --> N
-
-N --> H
+```text
+Wildlife-Population-Intelligence-System/
+│
+├── backend/
+│   ├── app/
+│   │   ├── ai/
+│   │   ├── api/
+│   │   ├── auth/
+│   │   ├── database/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   └── main.py
+│   ├── requirements.txt
+│   ├── check_wildlife_dataset.py
+│   └── prepare_population_dataset.py
+│
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   ├── package.json
+│   ├── package-lock.json
+│   └── vite.config.js
+│
+├── datasets/
+│   ├── wildlife_population_data.csv
+│   ├── observations-770098.csv
+│   ├── bird_songs_metadata.csv
+│   ├── class.csv
+│   └── zoo.csv
+│
+├── wavfiles/
+├── weights/
+├── README.md
+└── .gitignore

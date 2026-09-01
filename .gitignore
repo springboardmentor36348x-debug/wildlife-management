@@ -8,10 +8,22 @@ ml-service/__pycache__/
 server/.env
 ml-service/.env
 
-# Data (too large / shouldn't live in git)
+# Data
 data/raw-images/
 data/occurrence-samples/
 data/*.zip
+data/train/
+data/val/
+data/audio-train/
+data/audio-train-clean/
+
+# Runtime uploads
+server/uploads/
+
+# ML models - handled by Git LFS
+*.h5
+*.pkl
+*.joblib
 
 # Build output
 client/build/
@@ -21,9 +33,10 @@ client/dist/
 *.log
 npm-debug.log*
 
-# OS/editor junk
+# OS/editor
 .DS_Store
 .vscode/
 *.swp
 
-data/train/ and data/val/
+# Accidental nested repository
+wildlife-management/

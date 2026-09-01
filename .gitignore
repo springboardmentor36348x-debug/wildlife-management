@@ -6,3 +6,23 @@ dist/
 build/
 *.pyc
 .DS_Store
+
+# Large/generated wildlife files
+wavfiles/
+weights/
+
+# Uploaded/generated files
+backend/uploads/
+backend/audio_uploads/
+
+# Python cache
+backend/__pycache__/
+backend/app/__pycache__/
+
+# Environment files
+*.env
+
+# Large model files
+*.pt
+*.onnx
+*.pth

@@ -1,0 +1,58 @@
+# Python virtual environments
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Uploaded files
+uploads/
+
+# Training datasets
+training_data/
+
+# Training outputs
+runs/
+
+# Dataset metadata
+*.csv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# Build/cache
+.cache/
+.pytest_cache/
+.mypy_cache/

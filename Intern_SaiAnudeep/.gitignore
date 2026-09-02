@@ -1,0 +1,210 @@
+# ============================================================
+# Wildlife Population Intelligence System
+# Git Ignore File
+# ============================================================
+
+
+# ============================================================
+# Python Virtual Environments
+# ============================================================
+
+.venv/
+venv/
+env/
+
+backend/venv/
+backend/.venv/
+
+
+# ============================================================
+# Environment Variables / Secrets
+# ============================================================
+
+.env
+*.env
+backend/.env
+
+# Keep an example environment file if you create one later
+!.env.example
+!backend/.env.example
+
+
+# ============================================================
+# Python Cache / Compiled Files
+# ============================================================
+
+__pycache__/
+**/__pycache__/
+
+*.py[cod]
+*.pyo
+*.pyd
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.coverage
+htmlcov/
+
+
+# ============================================================
+# Node.js / React
+# ============================================================
+
+node_modules/
+**/node_modules/
+
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+.npm/
+
+
+# ============================================================
+# Frontend Build Files
+# ============================================================
+
+frontend/dist/
+frontend/build/
+
+dist/
+build/
+
+
+# ============================================================
+# Backend Generated Application Files
+# ============================================================
+
+backend/uploads/
+backend/runs/
+
+uploads/
+runs/
+
+tmp/
+temp/
+
+
+# ============================================================
+# Machine Learning Generated Files
+# ============================================================
+
+# Training outputs
+backend/runs/
+
+# Experiment tracking
+wandb/
+mlruns/
+
+# Model-training temporary files
+*.log
+
+
+# ============================================================
+# Large Training Dataset
+# ============================================================
+
+# Snapshot Serengeti training images/data
+backend/training_data/
+
+# General large datasets
+datasets/
+data/raw/
+data/processed/
+
+
+# ============================================================
+# IDE / Editor
+# ============================================================
+
+.vscode/
+.idea/
+
+# Keep useful VS Code configuration if we create it later
+!.vscode/settings.json
+!.vscode/extensions.json
+
+
+# ============================================================
+# Operating System Files
+# ============================================================
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# ============================================================
+# Docker
+# ============================================================
+
+docker-compose.override.yml
+
+
+# ============================================================
+# Python Packaging
+# ============================================================
+
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+
+# ============================================================
+# Temporary / Backup Files
+# ============================================================
+
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+# Large Snapshot Serengeti metadata files
+backend/SnapshotSerengeti_v2_1_annotations.csv
+backend/SnapshotSerengeti_v2_1_images.csv
+# Experimental expanded wildlife dataset
+backend/training_data_expanded/
+
+# Experimental model-training scripts/results
+backend/train_wildlife_expanded.py
+backend/train_wildlife.py.before-expanded
+backend/confusion_matrix_expanded.png
+
+# Local dataset/source directories
+backend/animal_audio_dataset/
+animal_audio_dataset_source/
+
+# Raw/processed audio datasets
+backend/audio_dataset/raw/
+backend/audio_dataset/processed/
+
+# Local backup copies created during development
+*.backup
+*.before-*
+*.bak
+
+# Nested/local copy of submission repository
+wildlife-management/
+
+# Large/local datasets and generated data
+backend/audio_dataset/raw/
+backend/audio_dataset/processed/
+backend/animal_audio_dataset/
+animal_audio_dataset_source/
+backend/training_data/
+backend/training_data_expanded/
+backend/runs/
+
+# Snapshot Serengeti large metadata
+backend/SnapshotSerengeti_v2_1_annotations.csv
+backend/SnapshotSerengeti_v2_1_images.csv
+
+# Backup and experimental files
+*.backup
+*.before-*
+*.bak
+backend/train_wildlife_expanded.py
+backend/confusion_matrix_expanded.png
+

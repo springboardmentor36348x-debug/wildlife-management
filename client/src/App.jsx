@@ -24,8 +24,7 @@ import ConservationOfficerDashboard from './components/ConservationOfficerDashbo
 import ForestDepartmentDashboard from './components/ForestDepartmentDashboard';
 import { Search, Bell, Plus, UserCheck, Shield } from 'lucide-react';
 
-const API_BASE = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api`;
-const roleCycle = ['Researcher', 'Conservation Officer', 'Forest Department Officer', 'Admin'];
+const API_BASE = `${import.meta.env.VITE_API_URL || window.location.origin}/api`;
 
 const defaultSpecies = [
   { _id: 's1', commonName: 'Bengal Tiger', scientificName: 'Panthera tigris', category: 'Mammal', classifierLabel: 'tiger', conservationStatus: 'Critical', imageUrl: 'https://images.unsplash.com/photo-1561731216-c3a4d99437d5?auto=format&fit=crop&w=600&q=80' },
@@ -95,6 +94,7 @@ const defaultSightings = [
 ];
 
 export default function App() {
+  const roleCycle = ['Researcher', 'Conservation Officer', 'Forest Department Officer', 'Admin'];
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register' | 'authenticated'
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || '');
@@ -356,11 +356,7 @@ export default function App() {
             
             {/* Role Switcher Badge */}
             <button
-              onClick={() => setUser(prev => {
-                const currentRole = roleCycle.includes(prev?.role) ? prev.role : 'Researcher';
-                const nextRole = roleCycle[(roleCycle.indexOf(currentRole) + 1) % roleCycle.length];
-                return { ...prev, role: nextRole };
-              })}
+              onClick={() => setUser(prev => ({ ...prev, role: roleCycle[(roleCycle.indexOf(prev.role) + 1) % roleCycle.length] }))}
               style={{
                 background: '#ffffff',
                 border: '1px solid var(--border-light)',
@@ -460,7 +456,6 @@ export default function App() {
                   <ResearchDashboard analytics={analytics} sightings={sightings} species={species} population={populationData} />
                 )
               )}
-
               {activeTab === 'population' && (
                 <PopulationPage />
               )}

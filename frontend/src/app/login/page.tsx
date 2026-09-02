@@ -42,13 +42,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">Sign In</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-2">Wildlife System</h2>
+        <p className="text-sm font-medium italic text-center text-green-600 mb-8">Intelligent Insights for Wildlife Conservation</p>
         {error && (
           <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm mb-4">
             {error}
           </div>
         )}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" autoComplete="off">
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input

@@ -131,10 +131,20 @@ def assess_site(
     db.commit()
     db.refresh(assessment)
 
+    from app.modules.habitat.providers.sentinel import SentinelHubProvider
+    from app.modules.habitat.providers.osm import OSMProvider
+    
+    # Optional: fetch from satellite APIs
+    satellite = SentinelHubProvider().fetch_vegetation_index(lat=site.latitude, lon=site.longitude)
+    osm_data = OSMProvider().fetch_protected_area(lat=site.latitude, lon=site.longitude)
+    
     return {
         **_serialize_assessment(assessment),
         "images_at_site": len(observations),
         "images_unreadable": len(observations) - len(metrics),
+        "satellite_data": satellite,
+        "osm_data": osm_data,
+        "assessment_transparency": "Habitat score is derived primarily from local camera trap imagery (green_pixel_fraction) with satellite/OSM data provided as supplementary context."
     }
 
 

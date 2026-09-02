@@ -20,6 +20,8 @@ from app.modules.habitat.router import router as habitat_router
 from app.modules.conservation.router import router as conservation_router
 from app.modules.ecosystem.router import router as ecosystem_router
 from app.modules.admin.router import router as admin_router
+from app.modules.notifications import router as notifications_router
+from prometheus_fastapi_instrumentator import Instrumentator
 
 setup_logging(settings.LOG_LEVEL)
 
@@ -30,6 +32,7 @@ app = FastAPI(
 )
 
 app.state.limiter = limiter
+Instrumentator().instrument(app).expose(app)
 
 
 @app.exception_handler(RateLimitExceeded)
@@ -73,3 +76,5 @@ app.include_router(habitat_router)
 app.include_router(conservation_router)
 app.include_router(ecosystem_router)
 app.include_router(admin_router)
+
+app.include_router(notifications_router.router)

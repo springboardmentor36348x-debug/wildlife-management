@@ -55,19 +55,52 @@ def recommend(inputs: dict) -> list[dict]:
 
 
 def _conservation_priority(inputs: dict, location: str) -> list[dict]:
+    recommendations = []
+    
+    # 1. Deterministic/Statistical logic
     overall = inputs.get("overall_health")
-    if overall is None or overall >= HEALTH_PRIORITY_THRESHOLD:
-        return []
-    return [{
-        "category": "conservation_priority",
-        "priority": "high" if overall < HEALTH_CRITICAL_THRESHOLD else "medium",
-        "title": f"{location} needs prioritised conservation attention",
-        "rationale": (
-            f"Overall ecosystem health score is {overall}/100 "
-            f"({inputs.get('health_band', 'unscored')}), computed from "
-            f"{inputs.get('health_computed_from', [])}."
-        ),
-    }]
+    if overall is not None and overall < HEALTH_PRIORITY_THRESHOLD:
+        recommendations.append({
+            "category": "conservation_priority",
+            "priority": "high" if overall < HEALTH_CRITICAL_THRESHOLD else "medium",
+            "title": f"{location} needs prioritised conservation attention",
+            "rationale": (
+                f"Overall ecosystem health score is {overall}/100 "
+                f"({inputs.get('health_band', 'unscored')}), computed from "
+                f"{inputs.get('health_computed_from', [])}."
+            ),
+        })
+
+    # 2. AI-Driven Prediction (XGBoost)
+    from app.modules.conservation.ml_engine import ml_engine
+    
+    trend_dict = inputs.get("vegetation_trend") or {}
+    veg_index = None # usually available via habitat assessments
+    deg_flag = inputs.get("habitat_degradation_significant", False)
+    effort = inputs.get("observation_effort", 0)
+    
+    # In a full system, we'd pass all exact feature metrics. Here we use what is available.
+    ai_prediction = ml_engine.predict_priority(
+        veg_index=0.5, # Default fallback since it's not directly in inputs dict right now
+        green_frac=0.5,
+        texture=0.5,
+        effort=float(effort) if effort is not None else 0.0,
+        has_degradation=deg_flag
+    )
+    
+    if ai_prediction:
+        score = ai_prediction["ml_priority_score"]
+        if score > 0.6:  # Threshold for high priority in our demo model
+            recommendations.append({
+                "category": "ai_conservation_priority",
+                "priority": "high" if score > 0.8 else "medium",
+                "title": f"AI Prediction: {location} shows elevated risk (Score: {score:.2f})",
+                "rationale": (
+                    f"XGBoost baseline model (v{ai_prediction['model_version']}) predicted a priority score of {score:.2f}/1.0 based on available habitat and observation metrics. {ai_prediction['disclaimer']}"
+                )
+            })
+
+    return recommendations
 
 
 def _wildlife_protection(inputs: dict) -> list[dict]:

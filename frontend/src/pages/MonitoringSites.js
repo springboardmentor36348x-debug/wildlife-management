@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import api from "../api/axios";
 import DashboardLayout from "../components/DashboardLayout";
-import SitesMap from "../components/SitesMap";
+import GISOverviewMap from "../components/GISOverviewMap";
 import { AuthContext } from "../context/AuthContext";
 import { PinIcon } from "../components/Icons";
 
@@ -21,6 +21,7 @@ function MonitoringSites() {
 
   const [sites, setSites] = useState([]);
   const [surveys, setSurveys] = useState([]);
+  const [cameraTraps, setCameraTraps] = useState([]);
   const [selectedSite, setSelectedSite] = useState(null);
   const [editingSiteId, setEditingSiteId] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
@@ -28,6 +29,7 @@ function MonitoringSites() {
   useEffect(() => {
     loadSites();
     loadSurveys();
+    api.get("/camera-traps/").then((res) => setCameraTraps(res.data)).catch((err) => console.log(err));
   }, []);
 
   const loadSites = () => {
@@ -112,7 +114,7 @@ function MonitoringSites() {
   return (
     <DashboardLayout title="Monitoring Sites">
       <div className="panel" style={{ marginBottom: 22 }}>
-        <div className="panel-title">Site Locations</div>
+        <div className="panel-title">Site & Camera Trap Locations</div>
 
         {missingCoordSites.length > 0 && (
           <div className="info-note" style={{ marginBottom: 14, marginTop: -4 }}>
@@ -122,7 +124,7 @@ function MonitoringSites() {
           </div>
         )}
 
-        <SitesMap sites={sites} onSelect={setSelectedSite} />
+        <GISOverviewMap sites={sites} cameraTraps={cameraTraps} onSiteSelect={setSelectedSite} />
       </div>
 
       <div className="dl-panels">

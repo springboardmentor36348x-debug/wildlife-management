@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
 import DashboardLayout from "../components/DashboardLayout";
-import SitesMap from "../components/SitesMap";
+import GISOverviewMap from "../components/GISOverviewMap";
 import { CameraIcon } from "../components/Icons";
 
 function CameraTraps() {
@@ -63,23 +63,6 @@ function CameraTraps() {
       .catch((err) => console.log(err));
   };
 
-  // Look up each trap's coordinates via its linked monitoring site so we
-  // can plot cameras on the map even though the trap record itself only
-  // stores monitoring_site_id, not lat/long directly.
-  const siteById = Object.fromEntries(sites.map((s) => [s.id, s]));
-  const mapPoints = traps
-    .map((trap) => {
-      const site = siteById[trap.monitoring_site_id];
-      if (!site) return null;
-      return {
-        site_name: trap.device_code,
-        habitat_type: `${trap.status} · ${site.site_name}`,
-        latitude: site.latitude,
-        longitude: site.longitude,
-      };
-    })
-    .filter(Boolean);
-
   const batteryColor = (level) => {
     if (level >= 60) return "var(--dl-accent)";
     if (level >= 25) return "var(--dl-amber)";
@@ -88,10 +71,10 @@ function CameraTraps() {
 
   return (
     <DashboardLayout title="Camera Traps">
-      {mapPoints.length > 0 && (
+      {sites.length > 0 && (
         <div className="panel" style={{ marginBottom: 22 }}>
           <div className="panel-title">Camera Trap Locations</div>
-          <SitesMap sites={mapPoints} />
+          <GISOverviewMap sites={sites} cameraTraps={traps} />
         </div>
       )}
 

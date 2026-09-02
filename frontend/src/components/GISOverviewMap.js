@@ -1,4 +1,3 @@
-// components/GISOverviewMap.js
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -33,8 +32,9 @@ function spread(lat, lng, occurrence) {
  * sites: [{ id, site_name, habitat_type, latitude, longitude }]
  * cameraTraps: [{ id, device_code, status, battery_level, monitoring_site_id }]
  * Camera trap coordinates are resolved via their linked monitoring site.
+ * onSiteSelect(site): optional callback fired when a site marker is clicked.
  */
-function GISOverviewMap({ sites = [], cameraTraps = [], height = 420 }) {
+function GISOverviewMap({ sites = [], cameraTraps = [], onSiteSelect, height = 420 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const layerRef = useRef(null);
@@ -66,12 +66,13 @@ function GISOverviewMap({ sites = [], cameraTraps = [], height = 420 }) {
     const seen = {};
     const bounds = [];
 
-    const place = (lat, lng, icon, popupHtml) => {
+    const place = (lat, lng, icon, popupHtml, onClick) => {
       const key = `${Number(lat).toFixed(5)},${Number(lng).toFixed(5)}`;
       const occurrence = seen[key] || 0;
       seen[key] = occurrence + 1;
       const [plat, plng] = spread(Number(lat), Number(lng), occurrence);
-      L.marker([plat, plng], { icon }).bindPopup(popupHtml).addTo(layer);
+      const marker = L.marker([plat, plng], { icon }).bindPopup(popupHtml).addTo(layer);
+      if (onClick) marker.on("click", onClick);
       bounds.push([plat, plng]);
     };
 
@@ -79,8 +80,13 @@ function GISOverviewMap({ sites = [], cameraTraps = [], height = 420 }) {
       sites
         .filter((s) => s.latitude != null && s.longitude != null && s.latitude !== "")
         .forEach((s) =>
-          place(s.latitude, s.longitude, SITE_ICON,
-            `<strong>${s.site_name || "Unnamed site"}</strong><br/>Monitoring site · ${s.habitat_type || "—"}`)
+          place(
+            s.latitude,
+            s.longitude,
+            SITE_ICON,
+            `<strong>${s.site_name || "Unnamed site"}</strong><br/>Monitoring site · ${s.habitat_type || "—"}`,
+            onSiteSelect ? () => onSiteSelect(s) : null
+          )
         );
     }
 
@@ -88,15 +94,19 @@ function GISOverviewMap({ sites = [], cameraTraps = [], height = 420 }) {
       cameraTraps.forEach((trap) => {
         const site = siteById[trap.monitoring_site_id];
         if (!site || site.latitude == null || site.longitude == null) return;
-        place(site.latitude, site.longitude, CAMERA_ICON,
-          `<strong>${trap.device_code}</strong><br/>Camera trap · ${trap.status} · ${trap.battery_level}% battery<br/>at ${site.site_name}`);
+        place(
+          site.latitude,
+          site.longitude,
+          CAMERA_ICON,
+          `<strong>${trap.device_code}</strong><br/>Camera trap · ${trap.status} · ${trap.battery_level}% battery<br/>at ${site.site_name}`
+        );
       });
     }
 
     if (bounds.length > 0) {
       map.fitBounds(L.latLngBounds(bounds), { padding: [40, 40], maxZoom: 10 });
     }
-  }, [sites, cameraTraps, showSites, showCameras]);
+  }, [sites, cameraTraps, showSites, showCameras, onSiteSelect]);
 
   return (
     <div>

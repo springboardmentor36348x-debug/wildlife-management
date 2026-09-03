@@ -1,0 +1,9 @@
+# Requirements for the training pipeline (backend/training/).
+# Install these separately from the API's requirements.txt - they're only
+# needed on whatever machine actually runs the training (Colab, cloud GPU),
+# not on the machine running the FastAPI server.
+
+ultralytics>=8.2.103
+requests>=2.31.0
+tqdm>=4.66.0
+Pillow>=10.4.0

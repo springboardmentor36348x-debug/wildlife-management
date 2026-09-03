@@ -1,0 +1,63 @@
+# --- Core web framework ---
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# --- Database ---
+# SQLAlchemy works with the built-in sqlite3 module out of the box (no extra install needed).
+sqlalchemy==2.0.35
+alembic==1.13.2
+# psycopg2-binary is only needed if you switch DATABASE_URL to postgresql://
+# Uncomment the line below once you move to Postgres:
+# psycopg2-binary==2.9.9
+
+# --- Auth ---
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1   # pinned: passlib 1.7.4 is incompatible with bcrypt>=4.1
+python-multipart==0.0.9
+
+# --- Validation / settings ---
+pydantic==2.9.2
+pydantic-settings==2.5.2
+email-validator==2.2.0
+
+# --- Image processing / CV (Milestone 2: Image Analysis Engine) ---
+
+# PRIMARY: global wildlife species identification, pretrained, no training
+# required. Covers 2000+ species worldwide. See app/services/image_analysis.py
+# module docstring for why this replaced fine-tuning YOLO on one region.
+speciesnet>=5.0.5
+megadetector>=6.0.0
+
+# FALLBACK: used if the above aren't installed, or for a custom-finetuned
+# checkpoint on hyper-local species not covered by SpeciesNet (see
+# backend/training/).
+opencv-python-headless==4.10.0.84
+Pillow==10.4.0
+numpy>=1.26.4
+ultralytics>=8.2.103   # YOLOv8 fallback detector
+
+# --- Audio processing (Milestone 2: Bioacoustic Engine) ---
+
+# PRIMARY (birds): BirdNET covers 6,522 bird species globally, pretrained,
+# no training required. See app/services/bioacoustic_engine.py module
+# docstring - there is no equivalent mature "any animal sound -> species"
+# global pretrained model for non-bird taxa, so those remain a placeholder.
+birdnetlib>=0.17.0
+tensorflow>=2.15.0  # BirdNET-Analyzer backend used by birdnetlib
+
+# FALLBACK / feature extraction used regardless of which classifier tier fires
+librosa>=0.10.2
+soundfile>=0.12.1
+
+# --- ML / analytics (Milestone 2/3: biodiversity + population stats) ---
+pandas>=2.2.2
+scikit-learn>=1.5.1
+
+# --- Reports & Export (Milestone 4) ---
+reportlab>=4.4.0
+openpyxl>=3.1.0
+
+# --- Testing ---
+pytest==8.3.2
+httpx==0.27.2

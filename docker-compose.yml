@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: wpi_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wpi_user
+      POSTGRES_PASSWORD: wpi_password
+      POSTGRES_DB: wildlife_intelligence_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - wpi_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wpi_user -d wildlife_intelligence_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: wpi_backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    environment:
+      # Using Postgres here since Docker makes it free to run.
+      # If you'd rather use SQLite even in Docker, delete this line and
+      # SQLite (the app default) will be used automatically.
+      DATABASE_URL: postgresql://wpi_user:wpi_password@db:5432/wildlife_intelligence_db
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - wpi_uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: wpi_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  wpi_postgres_data:
+  wpi_uploads:

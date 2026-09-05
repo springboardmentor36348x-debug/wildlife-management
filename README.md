@@ -1,538 +1,643 @@
 # 🦁 Wildlife Population Intelligence System
 
-**An AI-powered platform for wildlife monitoring, species recognition, population analysis, biodiversity assessment, habitat monitoring, and conservation intelligence.**
-
-> A comprehensive BTech Data Science project built with FastAPI, React, PostgreSQL, and Machine Learning
+An **AI-powered Wildlife Population Intelligence System** for automatic wildlife identification, population estimation, biodiversity monitoring, habitat assessment, and conservation support.
 
 ---
 
-## 📋 Table of Contents
+## 📌 1. Project Overview
 
-- [Project Overview](#-project-overview)
-- [Features](#-features)
-- [Tech Stack](#-tech-stack)
-- [Architecture](#-architecture)
-- [Installation](#-installation)
-- [Usage](#-usage)
-- [Project Phases](#-project-phases)
-- [API Documentation](#-api-documentation)
-- [File Structure](#-file-structure)
-- [Contributing](#-contributing)
-- [License](#-license)
+The Wildlife Population Intelligence System uses **Artificial Intelligence, Machine Learning, Computer Vision, and Bioacoustic Analysis** to monitor wildlife.
 
----
+The system can work with:
 
-## 🎯 Project Overview
+* 📷 Camera trap images
+* 🚁 Drone images
+* 🛰️ Satellite/environmental data
+* 🎙️ Wildlife audio recordings
+* 🌱 Environmental sensor data
 
-The **Wildlife Population Intelligence System** is a comprehensive AI-powered platform designed for:
-
-- **Wildlife Researchers**: Track species, monitor populations, analyze biodiversity
-- **Conservation Officers**: Assess threats, recommend conservation actions
-- **Forest Departments**: Manage protected areas, patrol planning
-- **Environmental Agencies**: Monitor ecosystem health, generate reports
-
-### Problem Statement
-Many organizations struggle with manual wildlife monitoring. This system automates species identification, population estimation, habitat assessment, and conservation recommendations using cutting-edge AI.
-
-### Solution
-An integrated platform that combines:
-- 📸 **Computer Vision** for image-based species recognition
-- 🔊 **Bioacoustics** for audio-based species identification
-- 📊 **Analytics** for population and biodiversity intelligence
-- 🗺️ **GIS** for spatial analysis and visualization
-- 🤖 **AI Assistant** for decision support
+The main goal is to help **wildlife researchers, conservation organizations, forest departments, environmental agencies, national parks, NGOs, and biodiversity monitoring teams**.
 
 ---
 
-## ✨ Features
+## 🎯 2. Objectives
 
-### Phase 1: Foundation ✅
-- ✅ User authentication (JWT + role-based access)
-- ✅ User management system
-- ✅ Wildlife monitoring workflows
-- ✅ Survey and site management
-- ✅ Device management
+The system aims to:
 
-### Phase 2: AI Recognition
-- 🔄 Wildlife image analysis (YOLOv8)
-- 🔄 Animal detection & counting
-- 🔄 Species classification
-- 🔄 Bioacoustic analysis (BirdNET, YAMNet)
-- 🔄 Biodiversity analytics
-
-### Phase 3: Intelligence
-- 🔄 Population estimation & trends
-- 🔄 Habitat health assessment
-- 🔄 Environmental monitoring
-- 🔄 Threat identification
-- 🔄 Conservation recommendations
-
-### Phase 4: Deployment
-- 🔄 Executive dashboards
-- 🔄 GIS/Map visualization
-- 🔄 Report generation (PDF, Excel)
-- 🔄 Testing suite
-- 🔄 Docker containerization
-
-### Phase 9: Testing & Security
-- 🔄 Comprehensive test suite
-- 🔄 Security audit
-- 🔄 Performance optimization
-- 🔄 Production deployment
-
-### Phase 10: Advanced AI
-- 🔄 Natural language AI assistant
-- 🔄 Intelligent recommendations
-- 🔄 Anomaly detection
-- 🔄 Real-time intelligence dashboard
+* Identify wildlife species automatically.
+* Detect and count animals in images.
+* Analyze wildlife sounds and animal calls.
+* Estimate wildlife population.
+* Monitor biodiversity changes.
+* Detect endangered species.
+* Assess habitat health.
+* Analyze species distribution and migration.
+* Provide conservation recommendations.
+* Generate dashboards and reports.
 
 ---
 
-## 🛠️ Tech Stack
+# 🏗️ 3. Main Modules
 
-### Backend
-- **Framework**: FastAPI (Python)
-- **Database**: PostgreSQL + PostGIS (with SQLite option)
-- **Authentication**: JWT + OAuth2
-- **ML/AI**: 
-  - YOLOv8 (object detection)
-  - BirdNET (bird sound recognition)
-  - TensorFlow/PyTorch (deep learning)
-  - Scikit-learn (analytics)
+## 3.1 User Authentication
 
-### Frontend
-- **Framework**: React 18
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **Charts**: Recharts
-- **Maps**: Leaflet + React-Leaflet
-- **State**: Zustand
-- **API Client**: Axios
+Provides secure access to the system.
 
-### Infrastructure
-- **Containerization**: Docker & Docker Compose
-- **Cloud**: AWS / Azure (Phase 4)
-- **GIS**: GeoPandas, QGIS, Rasterio
-- **Cache**: Redis
-- **Monitoring**: Logging, Sentry (optional)
+### Features
+
+* User registration
+* Login
+* JWT authentication
+* OAuth2
+* Role-based access
+* User profile management
+
+### User Roles
+
+* Wildlife Researcher
+* Conservation Officer
+* Forest Department Officer
+* Administrator
 
 ---
 
-## 🏗️ Architecture
+## 3.2 Wildlife Survey & Monitoring
 
+Manages wildlife surveys and monitoring locations.
+
+### Information Stored
+
+* Survey ID
+* Monitoring location
+* GPS coordinates
+* Habitat type
+* Survey date
+* Monitoring device
+* Protected area
+
+### Monitoring Devices
+
+* Camera traps
+* Audio sensors
+
+The module also maintains **observation history**.
+
+---
+
+## 3.3 Wildlife Image Analysis
+
+Analyzes wildlife images using computer vision and ML.
+
+### Features
+
+* Camera trap image upload
+* Drone image processing
+* Animal detection
+* Species classification
+* Individual animal identification
+* Animal counting
+* Bounding-box detection
+* Image quality assessment
+* Animal behavior detection
+
+### Example
+
+**Input:** Camera-trap image
+**Processing:** Detect animal → classify species → count animal
+**Output:** Species name + confidence + location + count.
+
+---
+
+## 3.4 Bioacoustic Recognition
+
+Analyzes wildlife sounds and recordings.
+
+### Features
+
+* Audio upload
+* Animal call detection
+* Bird-song recognition
+* Species classification
+* Acoustic event detection
+* Environmental noise filtering
+
+### Audio Types
+
+* 🐦 Bird calls
+* 🐘 Mammal vocalizations
+* 🐸 Amphibian calls
+* 🦗 Insect sounds
+
+---
+
+## 3.5 Species Identification
+
+Identifies the species present in images or audio.
+
+### Features
+
+* Species classification
+* Confidence estimation
+* Endangered species detection
+* Taxonomic classification
+* Unknown species identification
+
+### Supported Groups
+
+* Mammals
+* Birds
+* Reptiles
+* Amphibians
+* Insects
+* Marine species
+
+---
+
+## 3.6 Population Estimation
+
+Estimates and monitors wildlife populations.
+
+### Features
+
+* Population counting
+* Density estimation
+* Population trend analysis
+* Migration analysis
+* Species distribution mapping
+
+### Important Metrics
+
+* Population size
+* Population density
+* Growth rate
+* Migration patterns
+* Species richness
+
+---
+
+## 3.7 Biodiversity Intelligence
+
+Analyzes biodiversity and ecosystem conditions.
+
+### Features
+
+* Biodiversity index calculation
+* Species diversity analysis
+* Habitat health assessment
+* Ecosystem monitoring
+* Conservation priority analysis
+
+---
+
+## 3.8 Habitat Intelligence
+
+Monitors and evaluates wildlife habitats.
+
+### Features
+
+* Habitat classification
+* Habitat degradation detection
+* Vegetation analysis
+* Environmental condition monitoring
+* Habitat suitability prediction
+
+---
+
+## 3.9 Conservation Recommendation Engine
+
+Provides recommendations based on wildlife and habitat information.
+
+### Recommendations
+
+* Conservation priorities
+* Habitat restoration
+* Wildlife protection strategies
+* Monitoring optimization
+* Resource allocation
+
+---
+
+## 3.10 Wildlife Health Scoring
+
+Calculates an overall ecosystem health score.
+
+### Scoring Components
+
+| Component                 | Weight |
+| ------------------------- | -----: |
+| Species Diversity         |    30% |
+| Population Stability      |    25% |
+| Habitat Quality           |    20% |
+| Endangered Species Status |    15% |
+| Environmental Conditions  |    10% |
+
+### Health Levels
+
+* Excellent
+* Healthy
+* Moderate Concern
+* Vulnerable
+* Critical
+
+---
+
+# 📊 4. Dashboard & Analytics
+
+Different users receive different dashboards.
+
+### 👨‍🔬 Wildlife Researcher
+
+* Species observations
+* Population analytics
+* Biodiversity reports
+* Habitat insights
+
+### 🛡️ Conservation Officer
+
+* Threat monitoring
+* Conservation priorities
+* Species trends
+* Restoration recommendations
+
+### 🌲 Forest Department
+
+* Protected-area monitoring
+* Wildlife movement
+* Patrol planning
+* Incident reports
+
+### 👨‍💻 Administrator
+
+* User management
+* Platform analytics
+* Monitoring-system management
+* Report generation
+
+---
+
+# 🚨 5. Notification & Alert System
+
+The system generates alerts for important wildlife events.
+
+### Alerts
+
+* ⚠️ Endangered species detected
+* 📉 Population decline
+* 🌳 Habitat degradation
+* 📷 Monitoring-device problems
+* 🔔 Conservation notifications
+
+---
+
+# 📄 6. Reports & Export
+
+The system can generate:
+
+* Wildlife survey reports
+* Species population reports
+* Biodiversity reports
+* Habitat assessment reports
+* Conservation reports
+
+### Export Formats
+
+* PDF
+* Excel
+
+---
+
+# 🗓️ 7. Project Milestones
+
+## Milestone 1 — Week 1 & 2
+
+### Focus
+
+**Project Initialization & Core Setup**
+
+### Tasks
+
+* Define objectives
+* Design architecture
+* Design database
+* Create UI wireframes
+* Set up frontend/backend
+* Implement authentication
+* Build monitoring workflows
+* Integrate datasets
+
+### Expected Outcome
+
+A working authentication and wildlife monitoring system.
+
+---
+
+## Milestone 2 — Week 3 & 4
+
+### Focus
+
+**Species Recognition & Biodiversity**
+
+### Tasks
+
+* Wildlife image analysis
+* Bioacoustic recognition
+* Species identification
+* Biodiversity analytics
+* Wildlife reports
+
+### Expected Outcome
+
+Operational species recognition, audio analysis, and biodiversity assessment.
+
+---
+
+## Milestone 3 — Week 5 & 6
+
+### Focus
+
+**Population Intelligence & Conservation**
+
+### Tasks
+
+* Population estimation
+* Habitat intelligence
+* Conservation recommendations
+* Ecosystem health analytics
+* Wildlife dashboards
+
+### Expected Outcome
+
+Population intelligence, habitat intelligence, and conservation workflows.
+
+---
+
+## Milestone 4 — Week 7 & 8
+
+### Focus
+
+**Analytics, Testing & Deployment**
+
+### Tasks
+
+* Executive dashboards
+* Reports
+* GIS visualization
+* Testing
+* Validation
+* Docker deployment
+* Cloud deployment
+* Documentation
+
+### Expected Outcome
+
+A complete end-to-end wildlife monitoring platform.
+
+---
+
+# 📚 8. Datasets
+
+The project document recommends the following datasets:
+
+### Snapshot Serengeti
+
+Used for:
+
+* Wildlife detection
+* Camera-trap image classification
+
+### iNaturalist
+
+Used for:
+
+* Species classification
+* Biodiversity recognition
+
+### BirdCLEF
+
+Used for:
+
+* Bird sound recognition
+* Bioacoustic classification
+
+### Animal Kingdom
+
+Used for:
+
+* Animal image recognition
+* Species identification
+
+### GBIF
+
+Used for:
+
+* Species occurrence records
+* Biodiversity analysis
+
+---
+
+# 🛠️ 9. Technology Stack
+
+## Backend
+
+* Python
+* FastAPI
+
+## Frontend
+
+* JavaScript
+* React.js
+* Next.js
+* Tailwind CSS
+
+## Databases
+
+* PostgreSQL + PostGIS
+* MongoDB
+
+## Computer Vision / AI
+
+* YOLOv8
+* TensorFlow
+* PyTorch
+* OpenCV
+
+## Audio Intelligence
+
+* YAMNet
+* BirdNET
+* Librosa
+* TensorFlow Audio
+
+## Machine Learning
+
+* Scikit-learn
+* XGBoost
+* Pandas
+* NumPy
+
+## GIS & Remote Sensing
+
+* GeoPandas
+* QGIS
+* Rasterio
+* GDAL
+
+## Visualization
+
+* Plotly
+* Leaflet.js
+* Mapbox
+* Chart.js
+
+## Deployment
+
+* Docker
+* AWS / Azure
+
+## Development Tools
+
+* VS Code
+* Git & GitHub
+* Docker Compose
+* GitHub Actions
+* Postman
+
+---
+
+# 📈 10. Performance Metrics
+
+The project evaluates the system using different metrics.
+
+### Species Recognition
+
+* Classification accuracy
+* Detection precision
+* Identification recall
+
+### Bioacoustics
+
+* Audio classification accuracy
+* Animal-call precision
+* Noise-filtering effectiveness
+
+### Population Intelligence
+
+* Population estimation accuracy
+* Species counting accuracy
+* Migration prediction accuracy
+
+### Biodiversity
+
+* Biodiversity-index accuracy
+* Habitat assessment accuracy
+* Conservation recommendation relevance
+
+### System Performance
+
+* Image inference latency
+* Audio processing latency
+* API response time
+* Concurrent monitoring capacity
+
+---
+
+# 🎯 11. Expected Results
+
+The system should be able to:
+
+1. Identify wildlife species from images and audio.
+2. Count and estimate animal populations.
+3. Monitor biodiversity changes.
+4. Analyze habitat quality.
+5. Detect endangered species.
+6. Provide conservation recommendations.
+7. Generate useful dashboards and reports.
+8. Support large-scale wildlife monitoring.
+
+---
+
+# 🔄 12. Basic System Workflow
+
+```text
+Wildlife Data
+     ↓
+Images / Audio / Environmental Data
+     ↓
+Data Processing
+     ↓
+AI / ML Analysis
+     ↓
+Species Identification
+     ↓
+Population & Biodiversity Analysis
+     ↓
+Habitat & Ecosystem Assessment
+     ↓
+Conservation Recommendations
+     ↓
+Dashboard / Alerts / Reports
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      USER INTERFACE                         │
-│  React Frontend (Dashboard, Analytics, GIS, Reports)       │
-└────────────────────────┬────────────────────────────────────┘
-                         │ HTTP/REST
-                         ↓
-┌─────────────────────────────────────────────────────────────┐
-│                     API GATEWAY                             │
-│  FastAPI (Authentication, Validation, Routing)             │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-         ┌───────────────┼───────────────┐
-         ↓               ↓               ↓
-    ┌────────────┐ ┌──────────────┐ ┌──────────────┐
-    │ ML MODELS  │ │   ANALYTICS  │ │    GIS       │
-    ├────────────┤ ├──────────────┤ ├──────────────┤
-    │ YOLO v8    │ │Population    │ │ Leaflet Maps │
-    │ BirdNET    │ │Biodiversity  │ │ PostGIS      │
-    │ YAMNet     │ │Habitat       │ │ GeoPandas    │
-    │ TensorFlow │ │Conservation  │ │ Rasterio     │
-    └────────────┘ └──────────────┘ └──────────────┘
-                         │
-                         ↓
-         ┌──────────────────────────────┐
-         │   DATABASE LAYER             │
-         ├──────────────────────────────┤
-         │ PostgreSQL + PostGIS         │
-         │ (Tables: Users, Surveys,     │
-         │ Observations, Species, etc)  │
-         └──────────────────────────────┘
-```
 
 ---
 
-## 📦 Installation
+# 🌍 13. Project Benefits
 
-### Quick Start (Windows)
-
-```powershell
-# 1. Clone repository
-git clone <repo>
-cd wildlife-intelligence
-
-# 2. Backend Setup
-cd backend
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python -m uvicorn main:app --reload
-
-# 3. Frontend Setup (New Terminal)
-cd frontend
-npm install
-npm run dev
-
-# 4. Access
-# Backend API: http://localhost:8000
-# Frontend: http://localhost:5173
-# API Docs: http://localhost:8000/docs
-```
-
-### Detailed Installation
-
-See [INSTALLATION_GUIDE.md](./INSTALLATION_GUIDE.md) for:
-- Step-by-step setup
-- Database configuration
-- Docker deployment
-- Troubleshooting
+* Reduces manual wildlife monitoring effort.
+* Enables automated species identification.
+* Supports population monitoring.
+* Helps detect biodiversity changes.
+* Supports habitat conservation.
+* Provides data-driven conservation decisions.
+* Helps researchers and forest departments monitor wildlife efficiently.
 
 ---
 
-## 🚀 Usage
+# 🚀 14. Future Scope
 
-### Running the Application
+The platform can be extended with:
 
-#### Backend
-```bash
-cd backend
-.\venv\Scripts\Activate.ps1
-python -m uvicorn main:app --reload --port 8000
-```
-
-#### Frontend
-```bash
-cd frontend
-npm run dev
-```
-
-#### Docker (All-in-One)
-```bash
-docker-compose up -d
-# Then visit http://localhost
-```
-
-### Initial Login
-
-```
-Email: admin@wildlife.local
-Password: Admin123!
-```
-
-### API Testing
-
-```bash
-# View interactive API docs
-http://localhost:8000/docs
-
-# Example: Register user
-curl -X POST "http://localhost:8000/api/v1/auth/register" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "John Researcher",
-    "email": "john@example.com",
-    "password": "SecurePass123",
-    "role": "wildlife_researcher"
-  }'
-```
+* Real-time camera-trap monitoring
+* Real-time audio monitoring
+* Advanced GIS maps
+* Satellite-based habitat monitoring
+* Mobile application
+* Real-time conservation alerts
+* More wildlife species
+* Larger datasets
+* Cloud-based large-scale monitoring
 
 ---
 
-## 📊 Project Phases
+# 👥 15. Target Users
 
-### Timeline
-```
-Week 1-2: Phase 1 - Foundation
-Week 3-4: Phase 2 - AI Analysis
-Week 5-6: Phase 3 - Intelligence
-Week 7-8: Phase 4 - Deployment
-
-Additional:
-Week 9+: Phase 9 - Testing & Security
-Week 10+: Phase 10 - Advanced AI
-```
-
-### Phase Details
-
-| Phase | Duration | Focus | Status |
-|-------|----------|-------|--------|
-| 1 | Week 1-2 | Backend, Frontend, Auth, DB | ✅ Complete |
-| 2 | Week 3-4 | Image AI, Audio AI, Analytics | 🔄 In Progress |
-| 3 | Week 5-6 | Population, Habitat, Conservation | 🔄 In Progress |
-| 4 | Week 7-8 | GIS, Reports, Testing, Deploy | 🔄 In Progress |
-| 9 | - | Security, Optimization | ⏳ Planned |
-| 10 | - | AI Assistant, Real-time | ⏳ Planned |
+* Wildlife Researchers
+* Conservation Officers
+* Forest Departments
+* Environmental Agencies
+* National Parks
+* NGOs
+* Biodiversity Monitoring Teams
 
 ---
 
-## 📚 API Documentation
+# 📌 16. Conclusion
 
-### Authentication
+The **Wildlife Population Intelligence System** combines AI/ML, computer vision, bioacoustic analysis, biodiversity analytics, GIS, and environmental intelligence into a single platform.
 
-```bash
-# Register
-POST /api/v1/auth/register
-{
-  "name": "User",
-  "email": "user@example.com",
-  "password": "SecurePass123",
-  "role": "wildlife_researcher"
-}
-
-# Login
-POST /api/v1/auth/login
-{
-  "email": "user@example.com",
-  "password": "SecurePass123"
-}
-
-# Returns: { access_token, token_type, expires_in, user }
-```
-
-### Surveys
-
-```bash
-# Create survey
-POST /api/v1/surveys/
-{
-  "survey_name": "Tiger Survey",
-  "monitoring_site_id": 1,
-  "survey_date": "2024-08-20T10:00:00",
-  "weather_conditions": "Sunny"
-}
-
-# List surveys
-GET /api/v1/surveys/?skip=0&limit=10
-
-# Get survey
-GET /api/v1/surveys/1
-```
-
-### Image Analysis
-
-```bash
-# Upload and analyze image
-POST /api/v1/image-analysis/
-{
-  "observation_id": 1,
-  "image_file": "<binary>"
-}
-
-# Returns: { detected_species, confidence, animal_count, ... }
-```
-
-### Population Analytics
-
-```bash
-# Get population data
-GET /api/v1/population/?monitoring_site_id=1&time_period=monthly
-
-# Returns population trends, estimates, growth rates
-```
-
-### GIS/Maps
-
-```bash
-# Get species distribution
-GET /api/v1/gis/species-distribution/?species_id=1
-
-# Returns: GeoJSON with species locations
-```
-
-### Reports
-
-```bash
-# Generate report
-POST /api/v1/reports/generate
-{
-  "report_type": "biodiversity",
-  "monitoring_site_id": 1,
-  "period_start": "2024-01-01",
-  "period_end": "2024-12-31"
-}
-
-# Download report
-GET /api/v1/reports/1/download?format=pdf
-```
-
-**Full API docs at**: http://localhost:8000/docs
+Its main purpose is to transform raw wildlife data into **useful intelligence for population monitoring, habitat assessment, biodiversity protection, and conservation planning**.
 
 ---
 
-## 📁 File Structure
+## ⭐ Project Summary
 
-```
-wildlife-intelligence/
-├── backend/
-│   ├── main.py                 # Entry point
-│   ├── database.py             # DB config
-│   ├── models.py              # SQLAlchemy models
-│   ├── config.py              # Settings
-│   ├── security.py            # JWT & auth
-│   ├── requirements.txt        # Dependencies
-│   ├── Dockerfile             # Container config
-│   ├── routers/
-│   │   ├── auth.py           # Authentication
-│   │   ├── users.py          # User management
-│   │   ├── surveys.py        # Survey CRUD
-│   │   ├── observations.py   # Observation CRUD
-│   │   ├── species.py        # Species management
-│   │   ├── image_analysis.py # Image AI
-│   │   ├── audio_analysis.py # Audio AI
-│   │   ├── population.py     # Population analytics
-│   │   ├── biodiversity.py   # Biodiversity analytics
-│   │   ├── habitat.py        # Habitat intelligence
-│   │   ├── conservation.py   # Conservation logic
-│   │   ├── gis.py           # GIS & mapping
-│   │   ├── reports.py       # Report generation
-│   │   └── admin.py         # Admin functions
-│   ├── schemas/              # Pydantic models
-│   ├── services/             # Business logic
-│   ├── ml/                  # ML models
-│   └── tests/               # Unit tests
-├── frontend/
-│   ├── index.html           # Entry HTML
-│   ├── vite.config.js       # Vite config
-│   ├── package.json         # Dependencies
-│   ├── tailwind.config.js   # Tailwind config
-│   └── src/
-│       ├── main.jsx         # App entry
-│       ├── App.jsx          # Root component
-│       ├── components/      # Reusable components
-│       ├── pages/           # Page components
-│       ├── services/        # API services
-│       ├── hooks/           # Custom hooks
-│       ├── utils/           # Utilities
-│       └── styles/          # CSS files
-├── docker-compose.yml       # Multi-container setup
-├── .env.example            # Environment template
-├── README.md               # This file
-├── INSTALLATION_GUIDE.md   # Setup instructions
-├── docs/                   # Documentation
-├── models/                 # Pre-trained ML models
-└── uploads/               # User uploads
-```
+**Input:**
+Images + Audio + Environmental + Wildlife Data
 
----
+**Processing:**
+AI/ML + Computer Vision + Bioacoustic Analysis + GIS
 
-## 🧪 Testing
+**Output:**
+Species Identification + Population Estimation + Biodiversity Insights + Habitat Health + Conservation Recommendations
 
-```bash
-# Backend tests
-cd backend
-pytest
-
-# Frontend tests
-cd frontend
-npm run test
-
-# Coverage report
-pytest --cov
-
-# Docker testing
-docker-compose -f docker-compose.test.yml up
-```
-
----
-
-## 🔒 Security
-
-- ✅ JWT authentication with expiration
-- ✅ Password hashing with bcrypt
-- ✅ Role-based access control (RBAC)
-- ✅ CORS protection
-- ✅ SQL injection prevention (SQLAlchemy parameterized)
-- ✅ XSS protection (React + Tailwind)
-- ✅ Environment variables for secrets
-- ✅ HTTPS ready
-- ✅ Rate limiting (Phase 9)
-- ✅ Audit logging (Phase 9)
-
----
-
-## 📈 Performance
-
-- 🚀 API response time: < 200ms
-- 🚀 Image inference: < 5 seconds
-- 🚀 Concurrent users: 1000+
-- 🚀 Database queries: Optimized with indexes
-- 🚀 Frontend bundle: < 500KB gzipped
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see LICENSE file for details.
-
----
-
-## 👥 Authors
-
-- **Your Name** - BTech Data Science Student
-- Project Supervisor
-- Conservation Partner
-
----
-
-## 📞 Support & Documentation
-
-- **API Docs**: http://localhost:8000/docs
-- **Installation**: See [INSTALLATION_GUIDE.md](./INSTALLATION_GUIDE.md)
-- **Phase Details**: See project specification PDF
-- **Issues**: Create an issue on GitHub
-
----
-
-## 🎯 Roadmap
-
-- [x] Phase 1: Foundation (Users, Auth, DB, Basic UI)
-- [ ] Phase 2: AI Analysis (Image, Audio, Species)
-- [ ] Phase 3: Intelligence (Population, Habitat, Conservation)
-- [ ] Phase 4: Deployment (GIS, Reports, Testing, Docker)
-- [ ] Phase 9: Testing & Security (Test Suite, Security Audit)
-- [ ] Phase 10: Advanced AI (AI Assistant, Real-time Analytics)
-
----
-
-## 💡 Key Learnings
-
-This project demonstrates:
-- Full-stack web application development
-- RESTful API design with FastAPI
-- React component architecture
-- Database design and optimization
-- Machine learning integration
-- Docker containerization
-- GIS and spatial data handling
-- Role-based authorization
-- Testing and documentation
-
----
-
-## 🌍 Real-World Applications
-
-- 🦁 Wildlife conservation organizations
-- 🌳 National parks management
-- 🌍 Environmental research institutions
-- 🏞️ Habitat restoration projects
-- 📊 Biodiversity monitoring programs
-- 🔬 Ecological research initiatives
-
----
-
-**Built with ❤️ for wildlife conservation**
-
-*Last Updated: January 2025*
+**Goal:**
+🌳 **Smarter Wildlife Monitoring → Better Conservation Decisions → Healthier Ecosystems**

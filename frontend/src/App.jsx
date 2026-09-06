@@ -1,118 +1,102 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { ProtectedRoute, RoleRoute } from "./components/RouteGuards";
-import Layout from "./components/Layout";
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import DashboardPage from "./pages/DashboardPage";
-import SurveysPage from "./pages/SurveysPage";
-import DatasetsPage from "./pages/DatasetsPage";
-import UsersPage from "./pages/UsersPage";
-import ReportsPage from "./pages/ReportsPage";
-import SpeciesRecognitionPage from "./pages/SpeciesRecognitionPage";
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
 
-function AuthedLayout({ children }) {
-  return (
-    <ProtectedRoute>
-      <Layout>{children}</Layout>
-    </ProtectedRoute>
-  );
-}
-
-function PublicOnlyRoute({ children }) {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  if (user) return <Navigate to="/" replace />;
-  return children;
-}
-
-function AppRoutes() {
-  return (
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          <PublicOnlyRoute>
-            <LoginPage />
-          </PublicOnlyRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicOnlyRoute>
-            <RegisterPage />
-          </PublicOnlyRoute>
-        }
-      />
-
-      <Route
-        path="/"
-        element={
-          <AuthedLayout>
-            <DashboardPage />
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/surveys"
-        element={
-          <AuthedLayout>
-            <SurveysPage />
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/datasets"
-        element={
-          <AuthedLayout>
-            <RoleRoute roles={["administrator", "researcher"]}>
-              <DatasetsPage />
-            </RoleRoute>
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/species-recognition"
-        element={
-          <AuthedLayout>
-            <RoleRoute roles={["administrator", "researcher", "forest_department"]}>
-              <SpeciesRecognitionPage />
-            </RoleRoute>
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/reports"
-        element={
-          <AuthedLayout>
-            <ReportsPage />
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/users"
-        element={
-          <AuthedLayout>
-            <RoleRoute roles={["administrator"]}>
-              <UsersPage />
-            </RoleRoute>
-          </AuthedLayout>
-        }
-      />
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-}
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import MonitoringSites from "./pages/MonitoringSites";
+import Surveys from "./pages/Surveys";
+import ImageAudioUpload from "./pages/ImageAudioUpload";
+import SpeciesObservations from "./pages/SpeciesObservations";
+import BiodiversityAnalytics from "./pages/BiodiversityAnalytics";
+import PopulationHabitat from "./pages/PopulationHabitat";
+import ConservationRecommendations from "./pages/ConservationRecommendations";
+import LiveMap from "./pages/LiveMap";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <AppRoutes />
-      </AuthProvider>
-    </BrowserRouter>
+    <div className="min-h-screen wildlife-bg-subtle">
+      <Navbar />
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/monitoring-sites"
+          element={
+            <ProtectedRoute>
+              <MonitoringSites />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/surveys"
+          element={
+            <ProtectedRoute>
+              <Surveys />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upload"
+          element={
+            <ProtectedRoute>
+              <ImageAudioUpload />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/species"
+          element={
+            <ProtectedRoute>
+              <SpeciesObservations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/biodiversity"
+          element={
+            <ProtectedRoute>
+              <BiodiversityAnalytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/population-habitat"
+          element={
+            <ProtectedRoute>
+              <PopulationHabitat />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/conservation"
+          element={
+            <ProtectedRoute>
+              <ConservationRecommendations />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/live-map"
+          element={
+            <ProtectedRoute>
+              <LiveMap />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </div>
   );
 }

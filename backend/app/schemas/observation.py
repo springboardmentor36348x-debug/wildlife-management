@@ -1,87 +1,54 @@
+import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import Optional, List
 
-from app.models.observation import ObservationType, DatasetSource, DatasetStatus
+from pydantic import BaseModel, ConfigDict
 
-
-class ObservationCreate(BaseModel):
-    site_id: str
-    observation_type: ObservationType
-    file_reference: str
-    captured_at: datetime
-    notes: str | None = None
+from app.models.observation import SourceType, SpeciesGroup, ConservationStatus
 
 
-class ObservationOut(BaseModel):
-    id: str
-    site_id: str | None
-    observation_type: ObservationType
-    file_reference: str
-    species_label: str | None
-    confidence_score: float | None
-    captured_at: datetime
-    ingested_at: datetime
-    notes: str | None
+class SpeciesObservationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
-
-
-# ---- Milestone 2: Image-based species detection ----
-
-class BoundingBox(BaseModel):
-    x: float
-    y: float
-    width: float
-    height: float
+    id: uuid.UUID
+    media_asset_id: uuid.UUID
+    survey_id: Optional[uuid.UUID] = None
+    species_common_name: str
+    species_scientific_name: Optional[str] = None
+    species_group: SpeciesGroup
+    conservation_status: ConservationStatus
+    confidence_score: float
+    individual_count: int
+    bounding_box: Optional[List[float]] = None
+    behavior: Optional[str] = None
+    acoustic_event_type: Optional[str] = None
+    detected_at: datetime
 
 
-class DetectionItem(BaseModel):
-    label: str
-    confidence: float
-    bbox: BoundingBox
+class MediaAssetOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    survey_id: Optional[uuid.UUID] = None
+    monitoring_site_id: uuid.UUID
+    source_type: SourceType
+    file_path: str
+    original_filename: str
+    quality_score: Optional[float] = None
+    processed: str
+    uploaded_at: datetime
 
 
-class DetectionResult(BaseModel):
-    observation_id: str
-    detected: bool
-    count: int
-    detections: list[DetectionItem]
-    top_label: str | None = None
-    top_confidence: float | None = None
+class ImageAnalysisResult(BaseModel):
+    """Response returned right after an image is uploaded & analyzed."""
+    media_asset: MediaAssetOut
+    detections: List[SpeciesObservationOut]
+    quality_score: float
+    processing_time_ms: float
 
 
-# ---- Milestone 3: Bioacoustic species detection ----
-
-class SoundMatch(BaseModel):
-    label: str
-    raw_class: str
-    confidence: float
-
-
-class SoundDetectionResult(BaseModel):
-    observation_id: str
-    detected: bool
-    label: str | None = None
-    confidence: float | None = None
-    all_matches: list[SoundMatch]
-
-
-class DatasetCreate(BaseModel):
-    name: str = Field(..., min_length=2, max_length=200)
-    source: DatasetSource
-    purpose: str | None = None
-    record_count: int = 0
-
-
-class DatasetOut(BaseModel):
-    id: str
-    name: str
-    source: DatasetSource
-    purpose: str | None
-    record_count: int
-    status: DatasetStatus
-    registered_at: datetime
-
-    class Config:
-        from_attributes = True
+class AudioAnalysisResult(BaseModel):
+    """Response returned right after an audio file is uploaded & analyzed."""
+    media_asset: MediaAssetOut
+    detections: List[SpeciesObservationOut]
+    processing_time_ms: float

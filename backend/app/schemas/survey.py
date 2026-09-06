@@ -1,61 +1,64 @@
+import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import Optional
 
-from app.models.survey import SurveyStatus, HabitatType, MonitoringDevice
+from pydantic import BaseModel, ConfigDict
 
-
-class SurveyCreate(BaseModel):
-    name: str = Field(..., min_length=2, max_length=200)
-    description: str | None = None
-    protected_area: str | None = None
-    start_date: datetime
-    end_date: datetime | None = None
-
-
-class SurveyUpdate(BaseModel):
-    name: str | None = None
-    description: str | None = None
-    protected_area: str | None = None
-    status: SurveyStatus | None = None
-    end_date: datetime | None = None
-
-
-class SurveyOut(BaseModel):
-    id: str
-    name: str
-    description: str | None
-    protected_area: str | None
-    status: SurveyStatus
-    start_date: datetime
-    end_date: datetime | None
-    created_by: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
+from app.models.survey import HabitatType, MonitoringDeviceType
 
 
 class MonitoringSiteCreate(BaseModel):
-    survey_id: str
-    site_name: str = Field(..., min_length=2, max_length=200)
-    latitude: float = Field(..., ge=-90, le=90)
-    longitude: float = Field(..., ge=-180, le=180)
+    name: str
+    latitude: float
+    longitude: float
     habitat_type: HabitatType = HabitatType.OTHER
-    monitoring_device: MonitoringDevice = MonitoringDevice.CAMERA_TRAP
-    protected_area: str | None = None
+    protected_area: Optional[str] = None
+    description: Optional[str] = None
 
 
 class MonitoringSiteOut(BaseModel):
-    id: str
-    survey_id: str
-    site_name: str
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
     latitude: float
     longitude: float
     habitat_type: HabitatType
-    monitoring_device: MonitoringDevice
-    protected_area: str | None
-    is_active: str
+    protected_area: Optional[str] = None
+    description: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+
+class MonitoringDeviceCreate(BaseModel):
+    monitoring_site_id: uuid.UUID
+    device_type: MonitoringDeviceType
+    device_code: str
+
+
+class MonitoringDeviceOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    monitoring_site_id: uuid.UUID
+    device_type: MonitoringDeviceType
+    device_code: str
+    is_active: str
+    installed_at: datetime
+
+
+class SurveyCreate(BaseModel):
+    survey_name: str
+    monitoring_site_id: uuid.UUID
+    survey_date: datetime
+    notes: Optional[str] = None
+
+
+class SurveyOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    survey_name: str
+    monitoring_site_id: uuid.UUID
+    survey_date: datetime
+    notes: Optional[str] = None
+    created_at: datetime

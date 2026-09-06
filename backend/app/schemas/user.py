@@ -1,43 +1,44 @@
-from pydantic import BaseModel, EmailStr, Field
+import uuid
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, EmailStr, ConfigDict
+
 from app.models.user import UserRole
 
 
 class UserCreate(BaseModel):
-    full_name: str = Field(..., min_length=2, max_length=120)
+    full_name: str
     email: EmailStr
-    password: str = Field(..., min_length=8)
-    role: UserRole = UserRole.RESEARCHER
-    organization: str | None = None
+    password: str
+    organization: Optional[str] = None
+    role: UserRole = UserRole.WILDLIFE_RESEARCHER
 
 
 class UserOut(BaseModel):
-    id: str
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
     full_name: str
     email: EmailStr
+    organization: Optional[str] = None
     role: UserRole
-    organization: str | None = None
     is_active: bool
+    created_at: datetime
 
-    class Config:
-        from_attributes = True
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 
 class Token(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
     user: UserOut
 
 
-class RefreshRequest(BaseModel):
-    refresh_token: str
-
-
-class RefreshResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-
-
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+class TokenPayload(BaseModel):
+    sub: Optional[str] = None
+    role: Optional[str] = None
+    exp: Optional[int] = None

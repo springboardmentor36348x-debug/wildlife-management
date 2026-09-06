@@ -1,28 +1,12 @@
-"""
-Survey & Monitoring Site models implementing FR-2:
-Survey & Site Tracking Management.
-"""
 import enum
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 
-from sqlalchemy import (
-    Column, String, DateTime, Float, ForeignKey, Enum as SAEnum, Text
-)
+from sqlalchemy import Column, String, DateTime, Enum, Float, ForeignKey, Text
+from app.db_types import GUID
 from sqlalchemy.orm import relationship
 
-from app.db.session import Base
-
-
-def _uuid() -> str:
-    return str(uuid.uuid4())
-
-
-class SurveyStatus(str, enum.Enum):
-    PLANNED = "planned"
-    ACTIVE = "active"
-    COMPLETED = "completed"
-    SUSPENDED = "suspended"
+from app.database import Base
 
 
 class HabitatType(str, enum.Enum):
@@ -31,62 +15,60 @@ class HabitatType(str, enum.Enum):
     WETLAND = "wetland"
     RIVERINE = "riverine"
     MOUNTAIN = "mountain"
-    MARINE = "marine"
+    COASTAL = "coastal"
     OTHER = "other"
 
 
-class MonitoringDevice(str, enum.Enum):
+class MonitoringDeviceType(str, enum.Enum):
     CAMERA_TRAP = "camera_trap"
-    DRONE = "drone"
     AUDIO_SENSOR = "audio_sensor"
+    DRONE = "drone"
     SATELLITE = "satellite"
-    MANUAL_SURVEY = "manual_survey"
-
-
-class Survey(Base):
-    """A multi-zone monitoring survey / project (FR-2)."""
-    __tablename__ = "surveys"
-
-    id = Column(String, primary_key=True, default=_uuid)
-    name = Column(String, nullable=False)
-    description = Column(Text, nullable=True)
-    protected_area = Column(String, nullable=True)
-    status = Column(SAEnum(SurveyStatus), default=SurveyStatus.PLANNED)
-    start_date = Column(DateTime, nullable=False)
-    end_date = Column(DateTime, nullable=True)
-
-    created_by = Column(String, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-
-    created_by_user = relationship("User", back_populates="surveys")
-    monitoring_sites = relationship(
-        "MonitoringSite", back_populates="survey", cascade="all, delete-orphan"
-    )
 
 
 class MonitoringSite(Base):
-    """
-    A physical monitoring location (camera trap / drone / audio node)
-    tied to a survey. GPS fields are plain floats here; once PostGIS is
-    provisioned in Milestone 4 these can be migrated to a Geography column
-    without changing the API contract.
-    """
+    """A registered location where surveys / sensors operate."""
     __tablename__ = "monitoring_sites"
 
-    id = Column(String, primary_key=True, default=_uuid)
-    survey_id = Column(String, ForeignKey("surveys.id"), nullable=False)
-
-    site_name = Column(String, nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    name = Column(String(150), nullable=False)
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
-    habitat_type = Column(SAEnum(HabitatType), default=HabitatType.OTHER)
-    monitoring_device = Column(SAEnum(MonitoringDevice), default=MonitoringDevice.CAMERA_TRAP)
-    protected_area = Column(String, nullable=True)
-    is_active = Column(String, default="true")  # kept simple/string for SQLite portability
+    habitat_type = Column(Enum(HabitatType), default=HabitatType.OTHER)
+    protected_area = Column(String(150), nullable=True)
+    description = Column(Text, nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    surveys = relationship("Survey", back_populates="monitoring_site")
+    devices = relationship("MonitoringDevice", back_populates="monitoring_site")
 
-    survey = relationship("Survey", back_populates="monitoring_sites")
-    observations = relationship(
-        "Observation", back_populates="site", cascade="all, delete-orphan"
-    )
+
+class MonitoringDevice(Base):
+    """Camera trap / audio sensor / drone registered at a site."""
+    __tablename__ = "monitoring_devices"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    monitoring_site_id = Column(GUID(), ForeignKey("monitoring_sites.id"), nullable=False)
+    device_type = Column(Enum(MonitoringDeviceType), nullable=False)
+    device_code = Column(String(100), nullable=False)
+    is_active = Column(String(20), default="active")
+    installed_at = Column(DateTime, default=datetime.utcnow)
+
+    monitoring_site = relationship("MonitoringSite", back_populates="devices")
+
+
+class Survey(Base):
+    """A monitoring/survey campaign run at a site over a date range."""
+    __tablename__ = "surveys"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    survey_name = Column(String(150), nullable=False)
+    monitoring_site_id = Column(GUID(), ForeignKey("monitoring_sites.id"), nullable=False)
+    survey_date = Column(DateTime, nullable=False)
+    notes = Column(Text, nullable=True)
+    created_by = Column(GUID(), ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    monitoring_site = relationship("MonitoringSite", back_populates="surveys")
+    observations = relationship("SpeciesObservation", back_populates="survey")

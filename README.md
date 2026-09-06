@@ -1,51 +1,108 @@
-# Wildlife Population Intelligence System — Milestone 1
+# Wildlife Population Intelligence System
 
-AI-Powered Wildlife Population Intelligence System: automated species identification,
-population estimation, habitat health assessment, and threat detection.
+An AI-powered platform for wildlife species identification, bioacoustic
+recognition, population estimation, and biodiversity analytics.
 
-This package contains the Milestone 1 deliverable: project initialization, requirement
-analysis, RBAC, core database schema, and survey/monitoring-site/dataset management —
-built as a working FastAPI backend + React frontend (not just a spec document).
+## Status
 
-See `SETUP_GUIDE.md` for full run instructions in VS Code.
+- **Milestone 1** (project init, auth, survey/monitoring management) — complete
+- **Milestone 2** (species recognition & biodiversity analysis) — complete
+- **Milestone 3** (population intelligence, habitat intelligence, conservation recommendations) — complete
+- **Milestone 4** (live GIS map, report export, production deployment hardening) — complete
 
-## Structure
+See `docs/MILESTONE_1.md` through `docs/MILESTONE_4.md` for details.
+
+## Architecture highlights
+
+- **Image species ID**: SpeciesNet (Google) + MegaDetector (Microsoft) —
+  pretrained, 2000+ species worldwide, no training required. Falls back to
+  YOLOv8 (custom-finetuned, then stock COCO) if not installed.
+- **Audio species ID**: BirdNET — pretrained, 6,522 bird species globally,
+  no training required. Falls back to a placeholder classifier for non-bird
+  sounds (no equivalent mature global model exists for those yet).
+- **Live GIS map**: WebSocket-pushed real-time sightings on an interactive
+  map (`/live-map`) — no polling. See `app/services/live_feed.py`.
+- See `app/services/image_analysis.py` and `app/services/bioacoustic_engine.py`
+  module docstrings for the full tiered fallback strategy.
+
+## 1. Project Structure
+
 ```
-wildlife-intelligence-system/
-├── backend/     FastAPI + SQLAlchemy + JWT auth (Python)
-├── frontend/    React + Vite + Tailwind (JavaScript)
-├── docs/        Original requirements & SDLC documents
-└── SETUP_GUIDE.md
+wildlife-population-intelligence-system/
+├── backend/                  # FastAPI + SQLite/PostgreSQL backend
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   ├── db_types.py       # portable UUID type (SQLite + Postgres)
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── auth/
+│   │   ├── routers/
+│   │   └── services/          # image_analysis.py, bioacoustic_engine.py, biodiversity_engine.py
+│   ├── training/               # optional YOLOv8 fine-tuning pipeline (see its README)
+│   ├── uploads/
+│   ├── tests/
+│   ├── requirements.txt
+│   └── .env.example
+├── frontend/                   # React + Vite + Tailwind frontend
+│   └── src/
+│       ├── api/
+│       ├── context/
+│       ├── components/
+│       ├── pages/
+│       └── App.jsx / main.jsx
+├── docs/
+├── docker-compose.yml
+└── README.md
 ```
 
-## Roles supported
-- Administrator
-- Wildlife Researcher
-- Conservation Officer
-- Forest Department
+## 2. Prerequisites
 
-## Demo credentials (after running the seed script)
-| Role | Email | Password |
-|---|---|---|
-| Administrator | admin@wildlife.org | Admin@12345 |
-| Researcher | researcher@wildlife.org | Research@12345 |
-| Conservation Officer | officer@wildlife.org | Officer@12345 |
-| Forest Department | forest@wildlife.org | Forest@12345 |
+- Python 3.11+
+- Node.js 18+ and npm
+- Docker & Docker Compose (optional — SQLite works without it)
 
-## What's implemented (Milestone 1)
-- JWT authentication (access + **refresh tokens** — stay logged in without re-entering your password every 60 minutes) + bcrypt password hashing
-- Role-based access control across 4 roles
-- Survey & multi-zone monitoring site management (GPS, habitat type, device type)
-- Multi-modal observation ingestion contract (image/audio/telemetry)
-- Dataset registry (Snapshot Serengeti, iNaturalist, BirdCLEF, GBIF, Animal Kingdom)
-  with **real file upload** — attach actual sample images/audio to a dataset, viewable
-  and downloadable via the app (not just metadata)
-- **Reports page** — a live "module records" feed and summary stats (Images Analyzed,
-  Audio Clips, Species Confirmed, Surveys, Sites) computed from real database rows
-- Role-tailored dashboards (Admin, Researcher, Officer, Forest Department)
+## 3. Quick Start (SQLite, no Docker, no Postgres)
 
-## What's intentionally out of scope here (future milestones per the roadmap)
-- Milestone 2: dataset cleaning/preprocessing automation
-- Milestone 3: YOLOv8 / BirdNET model training & inference
-- Milestone 4: PostGIS geospatial analytics, biodiversity/ecosystem health engine
-- Milestone 5: full polish, GIS map view, PDF/Excel export, production deployment
+### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+
+pip install -r requirements.txt
+
+cp .env.example .env
+# .env already defaults to SQLite — no edits needed
+
+uvicorn app.main:app --reload
+# -> http://localhost:8000/docs
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
+# -> http://localhost:5173
+```
+
+## 4. First-Time Walkthrough
+
+1. Register an account, log in.
+2. **Monitoring Sites** → register a site (name, GPS, habitat type).
+3. **Surveys** → log a survey tied to that site.
+4. **Upload Image/Audio** → upload a photo or audio clip. Detections appear
+   automatically via SpeciesNet/BirdNET (or fallback tiers).
+5. **Species Observations** → aggregated species + endangered alerts.
+6. **Biodiversity Analytics** → run a weighted ecosystem health assessment.
+
+## 5. Switching to PostgreSQL later
+
+1. Install PostgreSQL, create a database.
+2. Uncomment `psycopg2-binary` in `requirements.txt`, reinstall.
+3. Edit `DATABASE_URL` in `.env`.
+4. Restart the backend — no code changes needed (portable UUID type already
+   supports both databases).

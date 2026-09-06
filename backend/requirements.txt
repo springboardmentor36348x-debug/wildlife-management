@@ -33,7 +33,7 @@ megadetector>=6.0.0
 # backend/training/).
 opencv-python-headless==4.10.0.84
 Pillow>=10.4.0
-numpy>=1.26.4
+numpy>=1.23.5
 ultralytics>=8.2.103   # YOLOv8 fallback detector
 
 # --- Audio processing (Milestone 2: Bioacoustic Engine) ---
@@ -41,7 +41,7 @@ ultralytics>=8.2.103   # YOLOv8 fallback detector
 # PRIMARY (birds): BirdNET covers 6,522 bird species globally, pretrained,
 # no training required.
 birdnetlib>=0.17.0
-tensorflow-cpu>=2.15.0  # BirdNET-Analyzer CPU backend
+tensorflow-cpu>=2.15.1  # BirdNET-Analyzer CPU backend
 
 # FALLBACK / feature extraction used regardless of which classifier tier fires
 librosa>=0.10.2

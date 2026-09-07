@@ -51,10 +51,9 @@ except ImportError:  # pragma: no cover
 
 try:
     import importlib.util
-    _SPECIESNET_AVAILABLE = (
-        importlib.util.find_spec("speciesnet") is not None
-        and importlib.util.find_spec("megadetector") is not None
-    )
+_SPECIESNET_AVAILABLE = (
+    importlib.util.find_spec("speciesnet") is not None
+)
 except ImportError:  # pragma: no cover
     _SPECIESNET_AVAILABLE = False
 

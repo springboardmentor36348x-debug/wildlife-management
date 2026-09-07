@@ -25,8 +25,8 @@ email-validator==2.2.0
 # PRIMARY: global wildlife species identification, pretrained, no training
 # required. Covers 2000+ species worldwide. See app/services/image_analysis.py
 # module docstring for why this replaced fine-tuning YOLO on one region.
-speciesnet>=5.0.5
-megadetector>=6.0.0
+speciesnet==5.0.5
+megadetector==10.0.24
 
 # FALLBACK: used if the above aren't installed, or for a custom-finetuned
 # checkpoint on hyper-local species not covered by SpeciesNet (see
@@ -41,7 +41,7 @@ ultralytics>=8.2.103   # YOLOv8 fallback detector
 # PRIMARY (birds): BirdNET covers 6,522 bird species globally, pretrained,
 # no training required.
 birdnetlib>=0.17.0
-tensorflow-cpu>=2.15.1  # BirdNET-Analyzer CPU backend
+tensorflow-cpu==2.16.1  # BirdNET-Analyzer CPU backend
 
 # FALLBACK / feature extraction used regardless of which classifier tier fires
 librosa>=0.10.2

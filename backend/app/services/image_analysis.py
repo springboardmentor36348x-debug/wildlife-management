@@ -18,6 +18,7 @@ next tier instead of crashing.
 
 from __future__ import annotations
 
+import sys
 import json
 import logging
 import random

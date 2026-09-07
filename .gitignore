@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+
+# Uploads
+backend/uploads/images/*
+backend/uploads/audio/*
+!backend/uploads/images/.gitkeep
+!backend/uploads/audio/.gitkeep
+
+# OS
+.DS_Store

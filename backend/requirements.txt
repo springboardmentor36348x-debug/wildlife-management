@@ -33,7 +33,6 @@ megadetector==10.0.24
 # backend/training/).
 opencv-python-headless==4.10.0.84
 Pillow>=10.4.0
-numpy>=1.23.5
 ultralytics>=8.2.103   # YOLOv8 fallback detector
 
 # --- Audio processing (Milestone 2: Bioacoustic Engine) ---

@@ -3,7 +3,7 @@ import axios from "axios";
 import { UploadCloud, Play, Loader2, AudioLines } from "lucide-react";
 import Card from "../components/ui/Card";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
 
 export default function UploadAudio() {
   const inputRef = useRef(null);

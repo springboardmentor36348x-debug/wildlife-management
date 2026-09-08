@@ -16,7 +16,6 @@ export default function Register() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [country, setCountry] = useState("");
   const [role, setRole] = useState("Wildlife Researcher");
-  const [agreed, setAgreed] = useState(false);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,11 +30,6 @@ export default function Register() {
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
-      return;
-    }
-
-    if (!agreed) {
-      setError("Please agree to the Terms of Service and Privacy Policy");
       return;
     }
 
@@ -249,25 +243,10 @@ export default function Register() {
               </div>
             </div>
 
-            <label className="flex items-start gap-2 text-sm text-slate-600">
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="mt-0.5 rounded border-slate-300"
-              />
-              <span>
-                I agree to the{" "}
-                <a href="#" className="text-wild-700 font-medium hover:underline">Terms of Service</a>{" "}
-                and{" "}
-                <a href="#" className="text-wild-700 font-medium hover:underline">Privacy Policy</a>
-              </span>
-            </label>
-
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-wild-900 text-white font-medium hover:bg-wild-800 transition-colors disabled:opacity-60 shadow-sm"
+              className="w-full py-2.5 rounded-lg bg-wild-900 text-white font-medium hover:bg-wild-800 transition-all duration-200 disabled:opacity-60 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </button>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { UserCheck, UserX, Shield, CheckCircle, Clock, Search, RefreshCw } from "lucide-react";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
 
 export default function AdminUsers() {
   const { token, user: currentUser } = useAuth();

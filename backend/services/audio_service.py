@@ -25,7 +25,12 @@ try:
 except ImportError:
     HAS_TORCHAUDIO = False
 
-import librosa
+try:
+    import librosa
+    HAS_LIBROSA = True
+except ImportError:
+    HAS_LIBROSA = False
+    librosa = None
 
 logger = logging.getLogger(__name__)
 

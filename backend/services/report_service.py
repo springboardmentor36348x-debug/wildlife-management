@@ -22,32 +22,62 @@ except ImportError:
 
 def get_reports_summary(db: Session) -> Dict[str, Any]:
     """
-    Returns monthly summary metrics and list of available reports.
+    Returns dynamic monthly summary metrics grouped by real observation entry dates,
+    and a list of available reports.
     """
     observations = db.query(mm.Observation).all()
-    species_set = set(o.species.strip() for o in observations)
-    
-    # Monthly aggregation
-    now = datetime.utcnow()
-    current_month_str = now.strftime("%B %Y")
-    
-    obs_this_month = sum(
-        1 for o in observations 
-        if o.observation_datetime and o.observation_datetime.month == now.month and o.observation_datetime.year == now.year
-    )
-    if obs_this_month == 0 and observations:
-        obs_this_month = len(observations)
+    species_set = set(o.species.strip() for o in observations if o.species)
 
-    monthly_summaries = [
-        {"month": current_month_str, "observations": max(len(observations), obs_this_month), "speciesDetected": max(len(species_set), 1)},
-        {"month": "July 2026", "observations": 0, "speciesDetected": 0},
-        {"month": "June 2026", "observations": 0, "speciesDetected": 0},
-    ]
+    # Group observations by Month-Year based on real entry dates
+    monthly_data = {}
+    now = datetime.utcnow()
+    
+    for obs in observations:
+        dt = obs.observation_datetime or obs.created_at or now
+        month_key = dt.strftime("%B %Y")
+        month_sort_key = dt.strftime("%Y-%m")
+        
+        if month_key not in monthly_data:
+            monthly_data[month_key] = {
+                "sort_key": month_sort_key,
+                "month": month_key,
+                "observations": 0,
+                "species_set": set(),
+            }
+        
+        monthly_data[month_key]["observations"] += 1
+        if obs.species:
+            monthly_data[month_key]["species_set"].add(obs.species.strip())
+
+    # Sort months descending (latest month first)
+    sorted_months = sorted(monthly_data.values(), key=lambda x: x["sort_key"], reverse=True)
+    
+    monthly_summaries = []
+    for item in sorted_months:
+        monthly_summaries.append({
+            "month": item["month"],
+            "observations": item["observations"],
+            "speciesDetected": len(item["species_set"]),
+        })
+
+    # If no observations exist yet, generate dynamic recent calendar months
+    if not monthly_summaries:
+        for i in range(3):
+            m = (now.month - 1 - i) % 12 + 1
+            y = now.year - ((now.month - 1 - i) < 0 and 1 or 0)
+            month_dt = datetime(y, m, 1)
+            monthly_summaries.append({
+                "month": month_dt.strftime("%B %Y"),
+                "observations": 0,
+                "speciesDetected": 0,
+            })
+
+    latest_period = monthly_summaries[0]["month"] if monthly_summaries else now.strftime("%B %Y")
 
     recent_reports = [
-        {"name": f"{current_month_str} Wildlife Intelligence & Population Report", "type": "Comprehensive", "period": current_month_str},
-        {"name": "Ecosystem Health & Biodiversity Assessment", "type": "Biodiversity", "period": current_month_str},
-        {"name": "Targeted Conservation Interventions Summary", "type": "Conservation", "period": current_month_str},
+        {"name": f"{latest_period} Wildlife Intelligence & Population Report", "type": "Comprehensive", "period": latest_period},
+        {"name": "Ecosystem Health & Biodiversity Assessment", "type": "Biodiversity", "period": latest_period},
+        {"name": "Targeted Conservation Interventions Summary", "type": "Conservation", "period": latest_period},
     ]
 
     return {

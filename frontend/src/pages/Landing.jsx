@@ -5,11 +5,9 @@ import {
   Radar,
   Leaf,
   ShieldCheck,
-  Mail,
-  Globe,
-  MessageCircle,
 } from "lucide-react";
 import heroImage from "../assets/hero-forest.png";
+import tigerImage from "../assets/tiger.png";
 
 const features = [
   { icon: Sparkles, title: "AI-Powered Analysis", desc: "Advanced AI models for species identification and monitoring" },
@@ -28,14 +26,14 @@ export default function Landing() {
           <span className="font-semibold text-slate-800">Wildlife Intelligence</span>
         </div>
         <nav className="hidden md:flex items-center gap-6 text-sm text-slate-600">
-          <a href="#home">Home</a>
-          <a href="#features">Features</a>
-          <a href="#about">About</a>
-          <a href="#contact">Contact</a>
+          <a href="#home" className="hover:text-wild-600 transition-colors">Home</a>
+          <a href="#features" className="hover:text-wild-600 transition-colors">Features</a>
+          <a href="#about" className="hover:text-wild-600 transition-colors">About</a>
+          <a href="#contact" className="hover:text-wild-600 transition-colors">Contact</a>
         </nav>
         <div className="flex items-center gap-3">
-          <Link to="/login" className="px-4 py-2 text-sm rounded-full border border-wild-600 text-wild-700 hover:bg-wild-50">Login</Link>
-          <Link to="/register" className="px-4 py-2 text-sm rounded-full bg-wild-600 text-white hover:bg-wild-700">Register</Link>
+          <Link to="/login" className="px-4 py-2 text-sm rounded-full border border-wild-600 text-wild-700 hover:bg-wild-50 hover:border-wild-700 hover:shadow-sm transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">Login</Link>
+          <Link to="/register" className="px-4 py-2 text-sm rounded-full bg-wild-600 text-white hover:bg-wild-700 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">Register</Link>
         </div>
       </header>
 
@@ -49,21 +47,21 @@ export default function Landing() {
           alt="Wildlife forest"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-wild-950/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-wild-950/90" />
 
         <div className="relative z-10 flex flex-col items-center">
-          <span className="text-xs uppercase tracking-wide text-wild-200 bg-white/10 backdrop-blur px-3 py-1 rounded-full mb-4">
+          <span className="text-xs uppercase tracking-widest font-semibold text-emerald-300 bg-emerald-950/80 border border-emerald-500/40 backdrop-blur px-4 py-1.5 rounded-full mb-4 shadow-sm">
             AI Powered
           </span>
-          <h1 className="text-4xl md:text-5xl font-bold text-white max-w-2xl drop-shadow-lg">
+          <h1 className="text-4xl md:text-5xl font-bold text-white max-w-2xl drop-shadow-lg leading-tight">
             Wildlife Population Intelligence System
           </h1>
-          <p className="text-white/90 mt-4 max-w-xl drop-shadow">
+          <p className="text-slate-100 mt-4 max-w-xl text-lg font-normal drop-shadow">
             AI-Powered Wildlife Monitoring &amp; Biodiversity Analysis
           </p>
           <div className="flex gap-4 mt-8">
-            <Link to="/login" className="px-6 py-2.5 rounded-full bg-wild-500 text-white font-medium hover:bg-wild-400">Login</Link>
-            <Link to="/register" className="px-6 py-2.5 rounded-full border border-white/50 text-white font-medium hover:bg-white/10">Register</Link>
+            <Link to="/login" className="px-6 py-2.5 rounded-full bg-wild-600 text-white font-medium hover:bg-wild-500 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">Login</Link>
+            <Link to="/register" className="px-6 py-2.5 rounded-full border border-white/60 text-white font-medium hover:bg-white/20 backdrop-blur-sm shadow-sm hover:shadow-md transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">Register</Link>
           </div>
         </div>
       </section>
@@ -91,19 +89,29 @@ export default function Landing() {
             <p className="text-slate-600 leading-relaxed mb-6">
               The Wildlife Population Intelligence System leverages artificial intelligence to monitor, analyze, and protect wildlife populations. Our system helps researchers, conservationists, and forest departments make informed decisions for sustainable management.
             </p>
-            <Link to="/register" className="inline-block px-6 py-2.5 rounded-full bg-wild-600 text-white font-medium hover:bg-wild-700">Learn More</Link>
+            <Link to="/register" className="inline-block px-6 py-2.5 rounded-full bg-wild-600 text-white font-medium hover:bg-wild-700 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200">Learn More</Link>
           </div>
-          <div className="rounded-2xl overflow-hidden h-64 bg-wild-800" />
+          <div className="rounded-2xl overflow-hidden h-64 shadow-lg border border-slate-200/50">
+            <img
+              src={tigerImage}
+              alt="Bengal Tiger in Forest"
+              className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+            />
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="px-8 py-10 bg-wild-950 text-wild-200/70 text-sm flex flex-col md:flex-row items-center justify-between gap-4">
-        <span>© 2024 Wildlife Intelligence System. All rights reserved.</span>
-        <div className="flex items-center gap-4">
-          <Globe size={18} />
-          <Mail size={18} />
-          <MessageCircle size={18} />
+      <footer id="contact" className="px-8 py-10 bg-wild-950 text-white text-sm flex flex-col md:flex-row items-center justify-between gap-4">
+        <span>© 2026 Wildlife Intelligence System. All rights reserved.</span>
+        <div className="flex items-center gap-2 text-wild-200">
+          <span>Contact:</span>
+          <a
+            href="mailto:support@wildlife-intelligence.com"
+            className="text-wild-400 hover:underline hover:text-white transition-colors font-medium"
+          >
+            support@wildlife-intelligence.com
+          </a>
         </div>
       </footer>
     </div>

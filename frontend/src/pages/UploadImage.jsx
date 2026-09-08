@@ -4,7 +4,7 @@ import Card from "../components/ui/Card";
 import { useAuth } from "../context/AuthContext.jsx";
 import { monitoringSitesApi, observationsApi } from "../api/monitoring.js";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "http://127.0.0.1:8000").replace(/\/+$/, "");
 
 export default function UploadImage() {
   const { token } = useAuth();

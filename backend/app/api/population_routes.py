@@ -6,6 +6,7 @@ from app.services.population_service import (
     get_population_summary,
     search_population_species
 )
+from app.auth.auth import require_roles
 
 
 router = APIRouter(
@@ -16,7 +17,15 @@ router = APIRouter(
 
 @router.get("/summary")
 def population_summary(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles(
+            "student",
+            "research_officer",
+            "forest_officer",
+            "admin"
+        )
+    )
 ):
     return get_population_summary(db)
 
@@ -24,13 +33,30 @@ def population_summary(
 @router.get("/species-search")
 def species_search(
     query: str = Query(..., min_length=1),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles(
+            "student",
+            "research_officer",
+            "forest_officer",
+            "admin"
+        )
+    )
 ):
     return search_population_species(db, query)
 
 
 @router.get("/locations")
-def population_locations():
+def population_locations(
+    current_user: dict = Depends(
+        require_roles(
+            "student",
+            "research_officer",
+            "forest_officer",
+            "admin"
+        )
+    )
+):
 
     import pandas as pd
     from pathlib import Path

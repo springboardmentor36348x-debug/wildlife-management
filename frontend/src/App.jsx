@@ -17,20 +17,53 @@ import Population from "./pages/Population";
 import Conservation from "./pages/Conservation";
 import EcosystemHealth from "./pages/EcosystemHealth";
 
+import StudentDashboard from "./pages/studentdashboard";
+import ResearchOfficerDashboard from "./pages/researchofficerdashboard";
+import ForestOfficerDashboard from "./pages/forestofficerdashboard";
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
 
+        {/* HOME */}
         <Route path="/" element={<Home />} />
 
+        {/* AUTHENTICATION */}
         <Route path="/login" element={<Login />} />
-
         <Route path="/register" element={<Register />} />
- 
-        <Route path="/population" element={<Population />} />
-        <Route path="/conservation" element={<Conservation />} />
-        
+
+        {/* STUDENT DASHBOARD */}
+        <Route
+          path="/student-dashboard"
+          element={
+            <ProtectedRoute>
+              <StudentDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* RESEARCH OFFICER DASHBOARD */}
+        <Route
+          path="/research-officer-dashboard"
+          element={
+            <ProtectedRoute>
+              <ResearchOfficerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* FOREST OFFICER DASHBOARD */}
+        <Route
+          path="/forest-officer-dashboard"
+          element={
+            <ProtectedRoute>
+              <ForestOfficerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ADMIN / COMMON DASHBOARD */}
         <Route
           path="/dashboard"
           element={
@@ -40,6 +73,7 @@ function App() {
           }
         />
 
+        {/* WILDLIFE */}
         <Route
           path="/wildlife"
           element={
@@ -49,6 +83,7 @@ function App() {
           }
         />
 
+        {/* IMAGE DETECTION */}
         <Route
           path="/detection"
           element={
@@ -58,15 +93,7 @@ function App() {
           }
         />
 
-        <Route
-          path="/history"
-          element={
-            <ProtectedRoute>
-              <History />
-            </ProtectedRoute>
-          }
-        />
-
+        {/* AUDIO DETECTION */}
         <Route
           path="/audio"
           element={
@@ -76,6 +103,17 @@ function App() {
           }
         />
 
+        {/* HISTORY */}
+        <Route
+          path="/history"
+          element={
+            <ProtectedRoute>
+              <History />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ANALYTICS */}
         <Route
           path="/analytics"
           element={
@@ -85,6 +123,7 @@ function App() {
           }
         />
 
+        {/* HABITAT */}
         <Route
           path="/habitat"
           element={
@@ -94,6 +133,37 @@ function App() {
           }
         />
 
+        {/* POPULATION */}
+        <Route
+          path="/population"
+          element={
+            <ProtectedRoute>
+              <Population />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* CONSERVATION */}
+        <Route
+          path="/conservation"
+          element={
+            <ProtectedRoute>
+              <Conservation />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* ECOSYSTEM HEALTH */}
+        <Route
+          path="/ecosystem-health"
+          element={
+            <ProtectedRoute>
+              <EcosystemHealth />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* REPORTS */}
         <Route
           path="/reports"
           element={
@@ -102,11 +172,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-  path="/ecosystem-health"
-  element={<EcosystemHealth />}
-/>
 
+        {/* PROFILE */}
         <Route
           path="/profile"
           element={

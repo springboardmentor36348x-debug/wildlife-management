@@ -27,10 +27,12 @@ function DashboardCards() {
     }
   }
 
+  const dataset = data?.wildlife_dataset;
+
   const cards = [
     {
-      title: "Total Detections",
-      value: data ? data.total_detections : "—",
+      title: "Total Wildlife Observations",
+      value: dataset ? dataset.total_observations : "—",
       icon: <FaDatabase />,
       iconBg: "bg-blue-500",
       bg: "bg-blue-500/10",
@@ -38,8 +40,8 @@ function DashboardCards() {
       text: "text-blue-400",
     },
     {
-      title: "Species Richness",
-      value: data ? data.species_richness : "—",
+      title: "Total Species",
+      value: dataset ? dataset.species_count : "—",
       icon: <FaPaw />,
       iconBg: "bg-amber-500",
       bg: "bg-amber-500/10",
@@ -47,8 +49,10 @@ function DashboardCards() {
       text: "text-amber-400",
     },
     {
-      title: "Species Records",
-      value: data ? data.species?.length : "—",
+      title: "Wildlife Groups",
+      value: dataset
+        ? Object.keys(dataset.groups || {}).length
+        : "—",
       icon: <FaChartBar />,
       iconBg: "bg-purple-500",
       bg: "bg-purple-500/10",
@@ -56,8 +60,11 @@ function DashboardCards() {
       text: "text-purple-400",
     },
     {
-      title: "Population Analysis",
-      value: data ? "Available" : "—",
+      title: "Top Species",
+      value:
+        dataset?.top_species?.length > 0
+          ? dataset.top_species[0].species
+          : "—",
       icon: <FaLeaf />,
       iconBg: "bg-cyan-500",
       bg: "bg-cyan-500/10",

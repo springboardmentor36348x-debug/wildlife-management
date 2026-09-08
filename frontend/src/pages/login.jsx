@@ -8,9 +8,6 @@ function Login() {
   async function handleLogin(e) {
     e.preventDefault();
 
-    console.log("Email:", email);
-    console.log("Password:", password);
-
     try {
       const response = await axios.post(
         "http://127.0.0.1:8000/users/login",
@@ -22,11 +19,31 @@ function Login() {
 
       console.log("SUCCESS:", response.data);
 
-      localStorage.setItem("token", response.data.access_token);
+      // Store JWT token
+      const token = response.data.access_token;
+      localStorage.setItem("token", token);
+
+      // Read user role from JWT
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const role = payload.role;
+
+      // Store role
+      localStorage.setItem("role", role);
 
       alert("Login Successful");
 
-      window.location.href = "/dashboard";
+      // Redirect according to user type
+      if (role === "student") {
+        window.location.href = "/student-dashboard";
+      } else if (role === "research_officer") {
+        window.location.href = "/research-officer-dashboard";
+      } else if (role === "forest_officer") {
+        window.location.href = "/forest-officer-dashboard";
+      } else if (role === "admin") {
+        window.location.href = "/dashboard";
+      } else {
+        alert("Invalid user role");
+      }
 
     } catch (error) {
       console.log("ERROR:", error.response);
@@ -47,7 +64,6 @@ function Login() {
         {/* Left Section */}
         <div className="hidden md:flex relative bg-gradient-to-br from-teal-900 via-[#0b2630] to-[#07111f] p-12 flex-col justify-between overflow-hidden">
 
-          {/* Decorative circles */}
           <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-teal-400/10" />
 
           <div className="absolute -bottom-24 -right-24 w-72 h-72 rounded-full bg-green-400/10" />
@@ -77,7 +93,6 @@ function Login() {
 
           </div>
 
-
           <div className="relative z-10">
 
             <div className="flex items-center gap-3 text-slate-400 text-sm">
@@ -100,7 +115,6 @@ function Login() {
 
         </div>
 
-
         {/* Right Login Section */}
         <div className="p-8 sm:p-12 bg-[#111827]">
 
@@ -112,7 +126,6 @@ function Login() {
             </div>
 
           </div>
-
 
           <div className="max-w-md mx-auto">
 
@@ -131,7 +144,6 @@ function Login() {
               </p>
 
             </div>
-
 
             <form onSubmit={handleLogin}>
 
@@ -161,7 +173,6 @@ function Login() {
 
               </div>
 
-
               {/* Password */}
               <div className="mb-7">
 
@@ -188,7 +199,6 @@ function Login() {
 
               </div>
 
-
               {/* Login Button */}
               <button
                 type="submit"
@@ -198,7 +208,6 @@ function Login() {
               </button>
 
             </form>
-
 
             {/* Footer */}
             <div className="mt-8 pt-6 border-t border-white/10 text-center">

@@ -13,8 +13,15 @@ function Conservation() {
 
   async function fetchRecommendations() {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        "http://127.0.0.1:8000/conservation/recommendations"
+        "http://127.0.0.1:8000/conservation/recommendations",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setData(response.data);
@@ -51,7 +58,6 @@ function Conservation() {
 
         </div>
 
-
         {/* Loading */}
         {loading && (
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-10 text-center">
@@ -67,7 +73,6 @@ function Conservation() {
           </div>
         )}
 
-
         {/* Error */}
         {!loading && error && (
           <div className="bg-red-500/10 border border-red-400/20 rounded-2xl p-6">
@@ -78,7 +83,6 @@ function Conservation() {
 
           </div>
         )}
-
 
         {/* Main Data */}
         {!loading && !error && data && (
@@ -100,7 +104,6 @@ function Conservation() {
                   </p>
 
                 </div>
-
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
@@ -130,7 +133,6 @@ function Conservation() {
 
                   </div>
 
-
                   {/* Species */}
                   <div className="bg-purple-500/10 border border-purple-400/20 rounded-2xl p-6">
 
@@ -155,7 +157,6 @@ function Conservation() {
                     </div>
 
                   </div>
-
 
                   {/* Birds */}
                   <div className="bg-blue-500/10 border border-blue-400/20 rounded-2xl p-6">
@@ -183,7 +184,6 @@ function Conservation() {
                     </div>
 
                   </div>
-
 
                   {/* Mammals */}
                   <div className="bg-orange-500/10 border border-orange-400/20 rounded-2xl p-6">
@@ -214,7 +214,6 @@ function Conservation() {
 
                 </div>
 
-
                 {/* Wildlife Groups */}
                 <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">
 
@@ -238,7 +237,6 @@ function Conservation() {
                     </div>
 
                   </div>
-
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -267,7 +265,6 @@ function Conservation() {
 
                 </div>
 
-
                 {/* Frequently Observed Species */}
                 <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">
 
@@ -291,7 +288,6 @@ function Conservation() {
                     </div>
 
                   </div>
-
 
                   <div className="space-y-3">
 
@@ -331,7 +327,6 @@ function Conservation() {
               </>
             )}
 
-
             {/* Application Detection Summary */}
             <div className="bg-blue-500/10 border border-blue-400/20 rounded-2xl p-6 mt-7">
 
@@ -344,7 +339,6 @@ function Conservation() {
               </p>
 
             </div>
-
 
             {/* Recommendations */}
             <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">
@@ -369,7 +363,6 @@ function Conservation() {
                 </div>
 
               </div>
-
 
               {data.recommendations &&
               data.recommendations.length > 0 ? (

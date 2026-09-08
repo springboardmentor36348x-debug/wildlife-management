@@ -16,27 +16,40 @@ function Reports() {
 
   const fetchReports = async () => {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        "http://127.0.0.1:8000/reports/"
+        "http://127.0.0.1:8000/population/locations",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
 
       setReports(response.data);
     } catch (error) {
       console.log(error);
-      alert("Failed to load reports.");
+      alert("Failed to load wildlife dataset.");
     }
   };
 
-  const filteredReports = reports.filter((item) =>
-    item.animal.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredReports = reports.filter((item) => {
+    const searchText = search.toLowerCase();
+
+    return (
+      (item.scientific_name || "").toLowerCase().includes(searchText) ||
+      (item.common_name || "").toLowerCase().includes(searchText) ||
+      (item.iconic_taxon_name || "").toLowerCase().includes(searchText)
+    );
+  });
 
   // PDF Export
   const downloadPDF = () => {
     const doc = new jsPDF();
 
     doc.setFontSize(18);
-    doc.text("Wildlife Monitoring Report", 14, 20);
+    doc.text("Wildlife Dataset Report", 14, 20);
 
     doc.setFontSize(11);
     doc.text(
@@ -46,30 +59,44 @@ function Reports() {
     );
 
     const tableData = filteredReports.map((item) => [
-      item.image,
-      item.animal,
-      `${item.confidence}%`,
-      new Date(item.date).toLocaleString(),
+      item.scientific_name || "—",
+      item.common_name || "—",
+      item.iconic_taxon_name || "—",
+      item.latitude ?? "—",
+      item.longitude ?? "—",
+      item.observed_on || "—"
     ]);
 
     autoTable(doc, {
       startY: 38,
       head: [
-        ["Image", "Animal", "Confidence", "Detection Date"],
+        [
+          "Scientific Name",
+          "Common Name",
+          "Group",
+          "Latitude",
+          "Longitude",
+          "Observation Date"
+        ]
       ],
       body: tableData,
+      styles: {
+        fontSize: 7
+      }
     });
 
-    doc.save("wildlife-monitoring-report.pdf");
+    doc.save("wildlife-dataset-report.pdf");
   };
 
   // Excel Export
   const downloadExcel = () => {
     const excelData = filteredReports.map((item) => ({
-      Image: item.image,
-      Animal: item.animal,
-      Confidence: `${item.confidence}%`,
-      "Detection Date": new Date(item.date).toLocaleString(),
+      "Scientific Name": item.scientific_name || "—",
+      "Common Name": item.common_name || "—",
+      "Wildlife Group": item.iconic_taxon_name || "—",
+      Latitude: item.latitude ?? "—",
+      Longitude: item.longitude ?? "—",
+      "Observation Date": item.observed_on || "—"
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
@@ -79,12 +106,12 @@ function Reports() {
     XLSX.utils.book_append_sheet(
       workbook,
       worksheet,
-      "Wildlife Reports"
+      "Wildlife Dataset"
     );
 
     XLSX.writeFile(
       workbook,
-      "wildlife-monitoring-report.xlsx"
+      "wildlife-dataset-report.xlsx"
     );
   };
 
@@ -103,21 +130,20 @@ function Reports() {
           </p>
 
           <h1 className="text-4xl font-bold text-white mt-2">
-            Wildlife Monitoring Reports
+            Wildlife Dataset Reports
           </h1>
 
           <p className="text-slate-400 mt-2 max-w-3xl">
-            Review recorded wildlife detection reports and export the
-            available information for further use.
+            Review wildlife observations from the population dataset
+            and export the available records for documentation and analysis.
           </p>
 
         </div>
 
-
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-7">
 
-          {/* Total Reports */}
+          {/* Total Records */}
           <div className="bg-blue-500/10 border border-blue-400/20 rounded-2xl p-6">
 
             <div className="flex items-center justify-between">
@@ -125,7 +151,7 @@ function Reports() {
               <div>
 
                 <p className="text-slate-400 text-sm">
-                  Total Reports
+                  Total Dataset Records
                 </p>
 
                 <p className="text-4xl font-bold text-white mt-2">
@@ -135,13 +161,12 @@ function Reports() {
               </div>
 
               <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center text-2xl">
-                📄
+                📊
               </div>
 
             </div>
 
           </div>
-
 
           {/* Filtered Records */}
           <div className="bg-teal-500/10 border border-teal-400/20 rounded-2xl p-6">
@@ -167,7 +192,6 @@ function Reports() {
             </div>
 
           </div>
-
 
           {/* Export */}
           <div className="bg-purple-500/10 border border-purple-400/20 rounded-2xl p-6">
@@ -196,7 +220,6 @@ function Reports() {
 
         </div>
 
-
         {/* Search & Export Panel */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-6 mb-7">
 
@@ -211,14 +234,13 @@ function Reports() {
 
               <input
                 type="text"
-                placeholder="Search by wildlife name..."
+                placeholder="Search by scientific name, common name or group..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full bg-[#0b1120] border border-white/10 text-white placeholder-slate-500 pl-12 pr-4 py-3.5 rounded-xl outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400/20 transition"
               />
 
             </div>
-
 
             {/* Export Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
@@ -230,7 +252,6 @@ function Reports() {
                 📄
                 Download PDF
               </button>
-
 
               <button
                 onClick={downloadExcel}
@@ -246,8 +267,7 @@ function Reports() {
 
         </div>
 
-
-        {/* Reports Table */}
+        {/* Dataset Table */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl overflow-hidden">
 
           {/* Table Header */}
@@ -262,11 +282,11 @@ function Reports() {
               <div>
 
                 <h2 className="text-2xl font-bold text-white">
-                  Detection Reports
+                  Wildlife Dataset Records
                 </h2>
 
                 <p className="text-slate-400 text-sm mt-1">
-                  Wildlife records retrieved from the reporting system.
+                  Observation records retrieved from the wildlife dataset.
                 </p>
 
               </div>
@@ -274,7 +294,6 @@ function Reports() {
             </div>
 
           </div>
-
 
           {/* Table */}
           <div className="overflow-x-auto">
@@ -286,25 +305,32 @@ function Reports() {
                 <tr className="bg-white/5 border-b border-white/10">
 
                   <th className="text-left p-4 text-slate-400 text-sm font-semibold">
-                    Image
+                    Scientific Name
                   </th>
 
                   <th className="text-left p-4 text-slate-400 text-sm font-semibold">
-                    Wildlife
+                    Common Name
                   </th>
 
                   <th className="text-left p-4 text-slate-400 text-sm font-semibold">
-                    Confidence
+                    Group
                   </th>
 
                   <th className="text-left p-4 text-slate-400 text-sm font-semibold">
-                    Detection Date
+                    Latitude
+                  </th>
+
+                  <th className="text-left p-4 text-slate-400 text-sm font-semibold">
+                    Longitude
+                  </th>
+
+                  <th className="text-left p-4 text-slate-400 text-sm font-semibold">
+                    Observation Date
                   </th>
 
                 </tr>
 
               </thead>
-
 
               <tbody>
 
@@ -317,39 +343,32 @@ function Reports() {
                       className="border-b border-white/5 hover:bg-white/5 transition"
                     >
 
+                      <td className="p-4 text-white font-medium">
+                        {item.scientific_name || "—"}
+                      </td>
+
                       <td className="p-4 text-slate-300">
-                        {item.image}
+                        {item.common_name || "—"}
                       </td>
-
 
                       <td className="p-4">
 
-                        <div className="flex items-center gap-3">
-
-                          <div className="w-9 h-9 rounded-lg bg-teal-500/10 text-teal-400 flex items-center justify-center">
-                            🐾
-                          </div>
-
-                          <span className="text-white font-medium">
-                            {item.animal}
-                          </span>
-
-                        </div>
-
-                      </td>
-
-
-                      <td className="p-4">
-
-                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-500/10 border border-amber-400/20 text-amber-400 text-sm font-semibold">
-                          {item.confidence}%
+                        <span className="inline-flex items-center px-3 py-1 rounded-full bg-teal-500/10 border border-teal-400/20 text-teal-400 text-sm font-semibold">
+                          {item.iconic_taxon_name || "—"}
                         </span>
 
                       </td>
 
+                      <td className="p-4 text-slate-400 text-sm">
+                        {item.latitude ?? "—"}
+                      </td>
 
                       <td className="p-4 text-slate-400 text-sm">
-                        {new Date(item.date).toLocaleString()}
+                        {item.longitude ?? "—"}
+                      </td>
+
+                      <td className="p-4 text-slate-400 text-sm">
+                        {item.observed_on || "—"}
                       </td>
 
                     </tr>
@@ -361,7 +380,7 @@ function Reports() {
                   <tr>
 
                     <td
-                      colSpan="4"
+                      colSpan="6"
                       className="p-12 text-center"
                     >
 
@@ -370,7 +389,7 @@ function Reports() {
                       </div>
 
                       <p className="text-slate-400">
-                        No wildlife reports found.
+                        No wildlife records found.
                       </p>
 
                       {search && (
@@ -393,7 +412,6 @@ function Reports() {
 
         </div>
 
-
         {/* Information */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">
 
@@ -410,9 +428,9 @@ function Reports() {
               </h2>
 
               <p className="text-slate-400 mt-2 leading-relaxed">
-                Use the search field to filter wildlife records. Reports
-                can be exported as PDF or Excel files for documentation,
-                analysis and conservation reporting.
+                Use the search field to filter wildlife dataset records.
+                Reports can be exported as PDF or Excel files for
+                documentation, analysis and conservation reporting.
               </p>
 
             </div>

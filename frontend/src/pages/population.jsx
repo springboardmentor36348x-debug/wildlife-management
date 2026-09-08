@@ -18,8 +18,15 @@ function Population() {
 
   async function fetchPopulationData() {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        "http://127.0.0.1:8000/population/summary"
+        "http://127.0.0.1:8000/population/summary",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
       );
 
       setData(response.data);
@@ -48,12 +55,17 @@ function Population() {
       setSearchLoading(true);
       setSearchMessage("");
 
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
         "http://127.0.0.1:8000/population/species-search",
         {
           params: {
-            query: query,
+            query: query
           },
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
       );
 
@@ -62,7 +74,6 @@ function Population() {
       if (!response.data.results || response.data.results.length === 0) {
         setSearchMessage(`No species found for "${query}".`);
       }
-
     } catch (err) {
       console.error(err);
       setSearchResults([]);
@@ -800,7 +811,7 @@ function Population() {
                             width: `${Math.min(
                               item.detection_count * 10,
                               100
-                            )}%`,
+                            )}%`
                           }}
                         />
 

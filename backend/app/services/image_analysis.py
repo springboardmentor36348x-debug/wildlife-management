@@ -19,6 +19,7 @@ next tier instead of crashing.
 from __future__ import annotations
 
 import sys
+import os
 import json
 import logging
 import random
@@ -43,11 +44,33 @@ try:
 except ImportError:  # pragma: no cover
     _YOLO_AVAILABLE = False
 
+def _has_enough_memory_for_speciesnet() -> bool:
+    """Return True only when the host has enough RAM for SpeciesNet."""
+    # Render's free web service has a very small memory limit.
+    # Skip SpeciesNet there and use the lighter YOLO/mock fallback.
+    if os.getenv("RENDER", "").strip().lower() == "true":
+        return False
+
+    # Also protect other low-memory Linux environments.
+    try:
+        with open("/proc/meminfo", "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("MemTotal:"):
+                    total_kb = int(line.split()[1])
+                    return total_kb >= 2 * 1024 * 1024  # 2 GB minimum
+    except (OSError, ValueError, IndexError):
+        pass
+
+    # If memory cannot be detected, keep the previous behavior.
+    return True
+
+
 try:
     import importlib.util
 
     _SPECIESNET_AVAILABLE = (
         importlib.util.find_spec("speciesnet") is not None
+        and _has_enough_memory_for_speciesnet()
     )
 except ImportError:  # pragma: no cover
     _SPECIESNET_AVAILABLE = False

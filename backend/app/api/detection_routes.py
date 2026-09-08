@@ -7,9 +7,12 @@ from app.database.connection import get_db
 from app.ai.detector import detect_animal
 from app.services.detection_service import save_detection
 from app.services.history_service import get_detection_history
+from app.auth.auth import require_roles
+
+
 router = APIRouter(
     prefix="/detect",
-    tags=["AI Detection"]
+    tags=["Detection"]
 )
 
 UPLOAD_FOLDER = "uploads"
@@ -20,7 +23,10 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @router.post("/image")
 async def detect_image(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles("student", "admin")
+    )
 ):
 
     file_path = os.path.join(
@@ -33,7 +39,6 @@ async def detect_image(
 
     detections = detect_animal(file_path)
 
-    # Save all detections into PostgreSQL
     for item in detections:
         save_detection(
             db=db,
@@ -47,9 +52,13 @@ async def detect_image(
         "detections": detections
     }
 
+
 @router.get("/history")
 def detection_history(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(
+        require_roles("student", "admin")
+    )
 ):
 
     history = get_detection_history(db)

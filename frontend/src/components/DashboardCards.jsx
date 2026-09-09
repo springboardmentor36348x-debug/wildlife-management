@@ -17,8 +17,15 @@ function DashboardCards() {
 
   async function fetchDashboardData() {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        "http://127.0.0.1:8000/population/summary"
+        "http://127.0.0.1:8000/population/summary",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setData(response.data);

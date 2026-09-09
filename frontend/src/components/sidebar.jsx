@@ -157,12 +157,26 @@ function Sidebar() {
   } else if (role === "admin") {
     roleItems = [
       ...studentItems,
-      ...researchOfficerItems,
-      ...forestOfficerItems,
+      {
+        name: "Conservation",
+        path: "/conservation",
+        icon: <FaShieldAlt />,
+        color: "text-orange-400",
+      },
+      {
+        name: "Ecosystem Health",
+        path: "/ecosystem-health",
+        icon: <FaHeartbeat />,
+        color: "text-pink-400",
+      },
     ];
   }
 
-  const menuItems = [...commonItems.slice(0, 1), ...roleItems, ...commonItems.slice(1)];
+  const menuItems = [
+    ...commonItems.slice(0, 1),
+    ...roleItems,
+    ...commonItems.slice(1),
+  ];
 
   const roleName = {
     student: "Student / Researcher",

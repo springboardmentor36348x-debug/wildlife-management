@@ -13,8 +13,15 @@ function EcosystemHealth() {
 
   async function fetchHealth() {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        "http://127.0.0.1:8000/ecosystem/health"
+        "http://127.0.0.1:8000/ecosystem/health",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setData(response.data);
@@ -94,7 +101,6 @@ function EcosystemHealth() {
 
         </div>
 
-
         {/* Loading */}
         {loading && (
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-10 text-center">
@@ -110,7 +116,6 @@ function EcosystemHealth() {
           </div>
         )}
 
-
         {/* Error */}
         {!loading && error && (
           <div className="bg-red-500/10 border border-red-400/20 rounded-2xl p-6">
@@ -121,7 +126,6 @@ function EcosystemHealth() {
 
           </div>
         )}
-
 
         {/* Main Content */}
         {!loading && !error && data && (
@@ -168,7 +172,6 @@ function EcosystemHealth() {
 
             </div>
 
-
             {/* Factors */}
             <div className="mt-8">
 
@@ -206,11 +209,9 @@ function EcosystemHealth() {
 
                       </div>
 
-
                       <h3 className="text-lg font-bold text-white mt-5">
                         {factor.title}
                       </h3>
-
 
                       <div className="mt-4">
 
@@ -228,7 +229,6 @@ function EcosystemHealth() {
 
                         </div>
 
-
                         <div className="w-full h-2 bg-slate-800 rounded-full mt-2 overflow-hidden">
 
                           <div
@@ -245,7 +245,6 @@ function EcosystemHealth() {
                         </div>
 
                       </div>
-
 
                       {/* Species richness is available from current data */}
                       {factor.key === "species_diversity" &&
@@ -270,7 +269,6 @@ function EcosystemHealth() {
               </div>
 
             </div>
-
 
             {/* Information */}
             <div className="mt-8 bg-[#111827] border border-white/10 rounded-2xl p-7">

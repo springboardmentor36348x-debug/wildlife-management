@@ -1,26 +1,30 @@
 """
-Wildlife Image Analysis Engine.
+Wildlife Image Analysis Engine (Milestone 2, spec section 4.3 / 4.5).
 
-Analysis strategy:
+ARCHITECTURE NOTE:
+Species identification uses a tiered strategy, best available option first:
 
-1. SpeciesNet on machines with enough RAM.
-2. YOLOv8 on normal/low-memory environments where it is safe to run.
-3. Mock detector as a guaranteed lightweight fallback.
+1. SpeciesNet (Google) - pretrained global wildlife identification pipeline.
+   SpeciesNet's official run_model command runs the detector + classifier
+   ensemble and supports 2000+ species worldwide.
+2. A custom-finetuned YOLOv8 checkpoint, if YOLO_MODEL_PATH is set.
+3. Stock YOLOv8 COCO checkpoint, filtered to animal classes.
+4. A mock detector, so the rest of the platform remains demoable even when
+   heavy ML dependencies are unavailable.
 
-SpeciesNet is intentionally disabled on Render's low-memory instances
-because it can exceed the 512 MB memory limit and cause the service to
-restart.
+Each tier is optional at import time. The engine degrades gracefully to the
+next tier instead of crashing.
 """
 
 from __future__ import annotations
 
+import sys
+import os
 import json
 import logging
-import os
 import random
 import shutil
 import subprocess
-import sys
 import tempfile
 import time
 from dataclasses import dataclass, field
@@ -29,136 +33,52 @@ from typing import List, Optional
 
 import numpy as np
 
-
-logger = logging.getLogger(__name__)
-
-
-# ---------------------------------------------------------------------------
-# Optional dependencies
-# ---------------------------------------------------------------------------
-
 try:
     import cv2
 except ImportError:  # pragma: no cover
     cv2 = None
 
-
 try:
     from ultralytics import YOLO
-
     _YOLO_AVAILABLE = True
 except ImportError:  # pragma: no cover
-    YOLO = None
     _YOLO_AVAILABLE = False
+
+
+def _has_enough_memory_for_speciesnet() -> bool:
+    """Return True only when the host has enough RAM for SpeciesNet."""
+    # Render's free web service has a very small memory limit.
+    # Skip SpeciesNet there and use the lighter YOLO/mock fallback.
+    if os.getenv("RENDER", "").strip().lower() == "true":
+        return False
+
+    # Also protect other low-memory Linux environments.
+    try:
+        with open("/proc/meminfo", "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("MemTotal:"):
+                    total_kb = int(line.split()[1])
+                    return total_kb >= 2 * 1024 * 1024  # 2 GB minimum
+    except (OSError, ValueError, IndexError):
+        pass
+
+    # If memory cannot be detected, keep the previous behavior.
+    return True
 
 
 try:
     import importlib.util
 
-    _SPECIESNET_INSTALLED = (
+    _SPECIESNET_AVAILABLE = (
         importlib.util.find_spec("speciesnet") is not None
+        and _has_enough_memory_for_speciesnet()
     )
-except Exception:  # pragma: no cover
-    _SPECIESNET_INSTALLED = False
+except ImportError:  # pragma: no cover
+    _SPECIESNET_AVAILABLE = False
 
 
-# ---------------------------------------------------------------------------
-# Runtime memory protection
-# ---------------------------------------------------------------------------
-
-def _get_total_memory_mb() -> Optional[float]:
-    """
-    Return total system RAM in MB when available.
-
-    Linux/Render exposes this through /proc/meminfo.
-    """
-    try:
-        meminfo = Path("/proc/meminfo")
-
-        if not meminfo.exists():
-            return None
-
-        for line in meminfo.read_text(
-            encoding="utf-8"
-        ).splitlines():
-
-            if line.startswith("MemTotal:"):
-                total_kb = int(line.split()[1])
-                return total_kb / 1024.0
-
-    except (
-        OSError,
-        ValueError,
-        IndexError,
-    ):
-        return None
-
-    return None
-
-
-def _is_render_environment() -> bool:
-    """
-    Detect Render deployment environment.
-    """
-    return (
-        os.getenv("RENDER", "")
-        .strip()
-        .lower()
-        == "true"
-    )
-
-
-def _can_run_speciesnet() -> bool:
-    """
-    SpeciesNet is a heavy model.
-
-    Render's 512 MB instance cannot safely run it, so it is disabled
-    there. It is also disabled on any machine with <= 1 GB RAM.
-    """
-
-    if not _SPECIESNET_INSTALLED:
-        return False
-
-    # Never run SpeciesNet on Render's low-memory service.
-    if _is_render_environment():
-        logger.info(
-            "SpeciesNet disabled on Render low-memory runtime."
-        )
-        return False
-
-    total_memory_mb = _get_total_memory_mb()
-
-    if total_memory_mb is not None and total_memory_mb <= 1024:
-        logger.info(
-            "SpeciesNet disabled because available system RAM "
-            "is %.0f MB.",
-            total_memory_mb,
-        )
-        return False
-
-    return True
-
-
-def _is_low_memory_runtime() -> bool:
-    """
-    True for Render/free-tier or other very small-memory environments.
-    """
-
-    if _is_render_environment():
-        return True
-
-    total_memory_mb = _get_total_memory_mb()
-
-    if total_memory_mb is not None and total_memory_mb <= 1024:
-        return True
-
-    return False
-
-
-# ---------------------------------------------------------------------------
-# Detection model
-# ---------------------------------------------------------------------------
-
+# COCO classes that loosely map to wildlife-relevant animals in the stock
+# YOLOv8 checkpoint.
 _COCO_ANIMAL_CLASSES = {
     "bird",
     "cat",
@@ -226,122 +146,104 @@ class Detection:
     conservation_status: str
     confidence_score: float
     individual_count: int
-    bounding_box: List[float] = field(
-        default_factory=list
-    )
+    bounding_box: List[float] = field(default_factory=list)
     behavior: str = "unknown"
 
 
-# ---------------------------------------------------------------------------
-# Image quality
-# ---------------------------------------------------------------------------
-
-def assess_image_quality(
-    image: "np.ndarray",
-) -> float:
+def assess_image_quality(image: "np.ndarray") -> float:
     """
-    Estimate image quality using blur and brightness.
+    Simple heuristic quality score (0-1) based on blur and brightness.
     """
-
     if cv2 is None or image is None:
         return 0.75
 
-    try:
-        gray = cv2.cvtColor(
-            image,
-            cv2.COLOR_BGR2GRAY,
-        )
+    gray = cv2.cvtColor(
+        image,
+        cv2.COLOR_BGR2GRAY,
+    )
 
-        blur_score = cv2.Laplacian(
-            gray,
-            cv2.CV_64F,
-        ).var()
+    blur_score = cv2.Laplacian(
+        gray,
+        cv2.CV_64F,
+    ).var()
 
-        brightness = gray.mean()
+    brightness = gray.mean()
 
-        blur_component = min(
-            blur_score / 500.0,
-            1.0,
-        )
+    blur_component = min(
+        blur_score / 500.0,
+        1.0,
+    )
 
-        brightness_component = (
-            1.0
-            - abs(brightness - 128) / 128.0
-        )
+    brightness_component = (
+        1.0 - abs(brightness - 128) / 128.0
+    )
 
-        quality = round(
-            0.6 * blur_component
-            + 0.4 * brightness_component,
-            3,
-        )
+    quality = round(
+        0.6 * blur_component
+        + 0.4 * brightness_component,
+        3,
+    )
 
-        return max(
-            0.0,
-            min(quality, 1.0),
-        )
-
-    except Exception:
-        return 0.75
+    return max(
+        0.0,
+        min(quality, 1.0),
+    )
 
 
-# ---------------------------------------------------------------------------
-# Guaranteed lightweight fallback
-# ---------------------------------------------------------------------------
-
-def _mock_detect(
-    image_bytes_len: int,
-) -> List[Detection]:
+def _mock_detect(image_bytes_len: int) -> List[Detection]:
     """
-    Lightweight deterministic fallback.
-
-    This guarantees that the application can still return a result when
-    heavy ML models cannot run on the deployment server.
+    Deterministic-ish mock detector used when no real detector is installed.
     """
-
     random.seed(image_bytes_len)
-
-    detections = []
 
     n_detections = random.randint(
         1,
         3,
     )
 
-    for _ in range(n_detections):
+    detections = []
 
-        (
-            common,
-            scientific,
-            group,
-            status,
-        ) = random.choice(
+    for _ in range(n_detections):
+        common, sci, group, status = random.choice(
             _MOCK_SPECIES_POOL
         )
 
         x1 = round(
-            random.uniform(0.05, 0.4),
+            random.uniform(
+                0.05,
+                0.4,
+            ),
             3,
         )
 
         y1 = round(
-            random.uniform(0.05, 0.4),
+            random.uniform(
+                0.05,
+                0.4,
+            ),
             3,
         )
 
         x2 = round(
-            x1 + random.uniform(0.2, 0.4),
+            x1 + random.uniform(
+                0.2,
+                0.4,
+            ),
             3,
         )
 
         y2 = round(
-            y1 + random.uniform(0.2, 0.4),
+            y1 + random.uniform(
+                0.2,
+                0.4,
+            ),
             3,
         )
 
         detections.append(
             Detection(
                 species_common_name=common,
-                species_scientific_name=scientific,
+                species_scientific_name=sci,
                 species_group=group,
                 conservation_status=status,
                 confidence_score=round(
@@ -376,9 +278,11 @@ def _mock_detect(
 
 
 # ---------------------------------------------------------------------------
-# SpeciesNet
+# Tier 1: SpeciesNet
 # ---------------------------------------------------------------------------
 
+# SpeciesNet's raw output does not directly provide IUCN status.
+# These hints only map broad taxonomic groups.
 _SPECIESNET_GROUP_HINTS = {
     "aves": "bird",
     "mammalia": "mammal",
@@ -389,24 +293,24 @@ _SPECIESNET_GROUP_HINTS = {
 }
 
 
-def _run_speciesnet(
-    file_path: str,
-) -> Optional[dict]:
-    """
-    Run SpeciesNet only when the runtime has enough memory.
+logger = logging.getLogger(__name__)
 
-    Any normal Python/subprocess failure is caught and the caller falls
-    back to YOLO or the lightweight detector.
+
+def _run_speciesnet(file_path: str) -> Optional[dict]:
+    """
+    Run the official SpeciesNet ensemble on a single image.
+
+    SpeciesNet's run_model command handles the detector and classifier
+    internally, so a separate MegaDetector installation is not required.
     """
 
-    if not _can_run_speciesnet():
+    if not _SPECIESNET_AVAILABLE:
         return None
 
     try:
-
         with tempfile.TemporaryDirectory() as tmp_dir:
 
-            staged_image = (
+            tmp_path = (
                 Path(tmp_dir)
                 / Path(file_path).name
             )
@@ -418,7 +322,7 @@ def _run_speciesnet(
 
             shutil.copy2(
                 file_path,
-                staged_image,
+                tmp_path,
             )
 
             subprocess.run(
@@ -434,13 +338,10 @@ def _run_speciesnet(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=180,
+                timeout=300,
             )
 
             if not output_json.exists():
-                logger.warning(
-                    "SpeciesNet completed without producing predictions."
-                )
                 return None
 
             with open(
@@ -449,19 +350,6 @@ def _run_speciesnet(
                 encoding="utf-8",
             ) as f:
                 return json.load(f)
-
-    except subprocess.TimeoutExpired:
-        logger.warning(
-            "SpeciesNet timed out. Falling back to another detector."
-        )
-        return None
-
-    except subprocess.CalledProcessError as exc:
-        logger.warning(
-            "SpeciesNet process failed: %s",
-            exc,
-        )
-        return None
 
     except Exception as exc:
         logger.warning(
@@ -472,8 +360,11 @@ def _run_speciesnet(
 
 
 def _parse_speciesnet_prediction(
-    data: dict,
+    data,
 ) -> List[Detection]:
+    """
+    Convert SpeciesNet run_model output into our Detection model.
+    """
 
     detections: List[Detection] = []
 
@@ -506,6 +397,8 @@ def _parse_speciesnet_prediction(
         ):
             continue
 
+        # SpeciesNet taxonomy labels are generally represented
+        # as semicolon-separated paths.
         parts = [
             p.strip()
             for p in prediction_label.split(";")
@@ -518,6 +411,8 @@ def _parse_speciesnet_prediction(
             else "Unknown Species"
         )
 
+        # Use the available taxonomy information as the
+        # scientific-name field when possible.
         scientific_name = "unclassified"
 
         if len(parts) >= 2:
@@ -525,19 +420,20 @@ def _parse_speciesnet_prediction(
 
         species_group = next(
             (
-                group
-                for taxon, group
+                grp
+                for taxon, grp
                 in _SPECIESNET_GROUP_HINTS.items()
                 if taxon in prediction_label.lower()
             ),
             "unknown",
         )
 
+        # Find animal detections returned by SpeciesNet.
         animal_boxes = [
             d
             for d in pred.get(
                 "detections",
-                [],
+                []
             )
             if (
                 d.get("category") == "1"
@@ -554,7 +450,6 @@ def _parse_speciesnet_prediction(
                         "conf",
                         0.0,
                     )
-                    or 0.0
                 ),
             )
 
@@ -568,6 +463,8 @@ def _parse_speciesnet_prediction(
                 ],
             )
 
+            # SpeciesNet/MegaDetector-style boxes are
+            # [x, y, width, height].
             x, y, w, h = bbox
 
             detection_confidence = float(
@@ -621,10 +518,14 @@ def _parse_speciesnet_prediction(
 
 
 # ---------------------------------------------------------------------------
-# YOLO
+# Tier 2/3: YOLOv8
 # ---------------------------------------------------------------------------
 
+
 def _get_yolo_model():
+    """
+    Lazily loads the configured YOLOv8 model.
+    """
 
     if not _YOLO_AVAILABLE:
         return None
@@ -645,114 +546,95 @@ def _run_yolo(
     image,
 ) -> List[Detection]:
 
-    if image is None:
+    model = _get_yolo_model()
+
+    if model is None or image is None:
         return []
 
-    # On a 512 MB Render instance, loading another heavy ML model can
-    # also cause an OOM. Use the guaranteed lightweight fallback instead.
-    if _is_low_memory_runtime():
-        logger.info(
-            "Skipping YOLO because the runtime has limited memory."
-        )
-        return []
+    from app.config import settings
 
-    try:
-
-        model = _get_yolo_model()
-
-        if model is None:
-            return []
-
-        from app.config import settings
-
-        model_path = settings.YOLO_MODEL_PATH.strip()
-
-        is_stock_model = model_path in (
+    is_stock_model = (
+        settings.YOLO_MODEL_PATH.strip()
+        in (
             "yolov8n.pt",
             "yolov8s.pt",
             "yolov8m.pt",
             "yolov8l.pt",
             "yolov8x.pt",
         )
+    )
 
-        detections: List[Detection] = []
+    detections: List[Detection] = []
 
-        results = model(
-            file_path,
-            verbose=False,
-        )
+    results = model(
+        file_path,
+        verbose=False,
+    )
 
-        for result in results:
+    for r in results:
 
-            for box in result.boxes:
+        for box in r.boxes:
 
-                cls_name = model.names[
-                    int(box.cls[0])
-                ]
+            cls_name = model.names[
+                int(box.cls[0])
+            ]
 
-                if (
-                    is_stock_model
-                    and cls_name
-                    not in _COCO_ANIMAL_CLASSES
-                ):
-                    continue
+            if (
+                is_stock_model
+                and cls_name
+                not in _COCO_ANIMAL_CLASSES
+            ):
+                continue
 
-                xyxy = box.xyxyn[
-                    0
-                ].tolist()
+            xyxy = box.xyxyn[
+                0
+            ].tolist()
 
-                detections.append(
-                    Detection(
-                        species_common_name=cls_name.title(),
-                        species_scientific_name="unclassified",
-                        species_group=(
-                            "bird"
-                            if cls_name == "bird"
-                            else "mammal"
-                        ),
-                        conservation_status="unknown",
-                        confidence_score=round(
-                            float(box.conf[0]),
-                            3,
-                        ),
-                        individual_count=1,
-                        bounding_box=[
-                            round(v, 3)
-                            for v in xyxy
-                        ],
-                        behavior="unknown",
-                    )
+            detections.append(
+                Detection(
+                    species_common_name=cls_name.title(),
+                    species_scientific_name="unclassified",
+                    species_group=(
+                        "mammal"
+                        if cls_name != "bird"
+                        else "bird"
+                    ),
+                    conservation_status="unknown",
+                    confidence_score=round(
+                        float(box.conf[0]),
+                        3,
+                    ),
+                    individual_count=1,
+                    bounding_box=[
+                        round(v, 3)
+                        for v in xyxy
+                    ],
+                    behavior="unknown",
                 )
+            )
 
-        return detections
-
-    except Exception as exc:
-
-        logger.warning(
-            "YOLO analysis failed: %s",
-            exc,
-        )
-
-        return []
+    return detections
 
 
 # ---------------------------------------------------------------------------
-# Main analysis
+# Main analysis entry point
 # ---------------------------------------------------------------------------
+
 
 def analyze_image(
     file_path: str,
 ) -> dict:
     """
-    Analyze one uploaded image.
+    Main entry point for the Image Analysis Engine.
 
-    On Render/free low-memory deployment:
-        SpeciesNet -> skipped
-        YOLO -> skipped
-        Lightweight fallback -> immediate result
+    Tries SpeciesNet first for global species coverage, then falls back
+    to YOLOv8, and finally to the mock detector.
 
-    On a sufficiently powerful machine:
-        SpeciesNet -> YOLO -> fallback
+    Returns:
+        detections
+        quality score
+        processing time
+        model actually used
     """
 
     start = time.time()
@@ -760,16 +642,9 @@ def analyze_image(
     image = None
 
     if cv2 is not None:
-
-        try:
-            image = cv2.imread(
-                file_path
-            )
-        except Exception as exc:
-            logger.warning(
-                "Could not read image: %s",
-                exc,
-            )
+        image = cv2.imread(
+            file_path
+        )
 
     quality_score = assess_image_quality(
         image
@@ -783,29 +658,24 @@ def analyze_image(
     # Tier 1: SpeciesNet
     # ---------------------------------------------------------
 
-    if _can_run_speciesnet():
+    speciesnet_pred = _run_speciesnet(
+        file_path
+    )
 
-        speciesnet_pred = _run_speciesnet(
-            file_path
+    if speciesnet_pred is not None:
+
+        detections = _parse_speciesnet_prediction(
+            speciesnet_pred
         )
 
-        if speciesnet_pred is not None:
-
-            detections = _parse_speciesnet_prediction(
-                speciesnet_pred
-            )
-
-            if detections:
-                model_used = "speciesnet"
+        if detections:
+            model_used = "speciesnet"
 
     # ---------------------------------------------------------
-    # Tier 2/3: YOLO
+    # Tier 2/3: YOLOv8
     # ---------------------------------------------------------
 
-    if (
-        not detections
-        and image is not None
-    ):
+    if not detections and image is not None:
 
         yolo_detections = _run_yolo(
             file_path,
@@ -836,25 +706,19 @@ def analyze_image(
             )
 
     # ---------------------------------------------------------
-    # Tier 4: Guaranteed lightweight fallback
+    # Tier 4: Mock detector
     # ---------------------------------------------------------
 
     if not detections:
 
-        try:
+        with open(
+            file_path,
+            "rb",
+        ) as f:
 
-            with open(
-                file_path,
-                "rb",
-            ) as f:
-
-                size = len(
-                    f.read()
-                )
-
-        except Exception:
-
-            size = 0
+            size = len(
+                f.read()
+            )
 
         detections = _mock_detect(
             size
@@ -865,12 +729,6 @@ def analyze_image(
     processing_time_ms = round(
         (time.time() - start) * 1000,
         2,
-    )
-
-    logger.info(
-        "Image analysis completed using %s in %.2f ms.",
-        model_used,
-        processing_time_ms,
     )
 
     return {

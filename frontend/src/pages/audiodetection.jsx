@@ -31,9 +31,16 @@ function AudioDetection() {
     setResult(null);
 
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.post(
         "http://127.0.0.1:8000/audio/detect",
-        formData
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setResult(response.data);
@@ -74,7 +81,6 @@ function AudioDetection() {
 
         </div>
 
-
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-7">
 
@@ -102,7 +108,6 @@ function AudioDetection() {
 
           </div>
 
-
           <div className="bg-cyan-500/10 border border-cyan-400/20 rounded-2xl p-6">
 
             <div className="flex items-center justify-between">
@@ -126,7 +131,6 @@ function AudioDetection() {
             </div>
 
           </div>
-
 
           <div className="bg-teal-500/10 border border-teal-400/20 rounded-2xl p-6">
 
@@ -154,10 +158,8 @@ function AudioDetection() {
 
         </div>
 
-
         {/* Main Sections */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-7">
-
 
           {/* Upload Card */}
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 shadow-xl">
@@ -181,7 +183,6 @@ function AudioDetection() {
               </div>
 
             </div>
-
 
             {/* Upload Area */}
             <label
@@ -215,7 +216,6 @@ function AudioDetection() {
 
             </label>
 
-
             <input
               id="audio-file"
               type="file"
@@ -223,7 +223,6 @@ function AudioDetection() {
               onChange={handleFileChange}
               className="hidden"
             />
-
 
             {/* Selected Audio */}
             {audio && (
@@ -250,7 +249,6 @@ function AudioDetection() {
 
                 </div>
 
-
                 {audioUrl && (
 
                   <audio
@@ -264,7 +262,6 @@ function AudioDetection() {
               </div>
 
             )}
-
 
             {/* Detect Button */}
             <button
@@ -284,7 +281,6 @@ function AudioDetection() {
             </button>
 
           </div>
-
 
           {/* Result Card */}
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 shadow-xl">
@@ -309,7 +305,6 @@ function AudioDetection() {
 
             </div>
 
-
             {/* Empty State */}
             {!result && !loading && (
 
@@ -332,7 +327,6 @@ function AudioDetection() {
 
             )}
 
-
             {/* Loading State */}
             {loading && (
 
@@ -353,7 +347,6 @@ function AudioDetection() {
               </div>
 
             )}
-
 
             {/* Result */}
             {result && !loading && (
@@ -381,7 +374,6 @@ function AudioDetection() {
                     </div>
 
                   </div>
-
 
                   {/* Confidence */}
                   <div className="mt-7">
@@ -416,7 +408,6 @@ function AudioDetection() {
 
                 </div>
 
-
                 {/* File Information */}
                 <div className="mt-5 bg-white/5 border border-white/10 rounded-xl p-5">
 
@@ -438,10 +429,8 @@ function AudioDetection() {
 
         </div>
 
-
         {/* Information Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-7">
-
 
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-6">
 
@@ -460,7 +449,6 @@ function AudioDetection() {
 
           </div>
 
-
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-6">
 
             <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center text-2xl">
@@ -477,7 +465,6 @@ function AudioDetection() {
             </p>
 
           </div>
-
 
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-6">
 
@@ -496,7 +483,6 @@ function AudioDetection() {
           </div>
 
         </div>
-
 
         {/* Information Panel */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">

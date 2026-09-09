@@ -11,8 +11,15 @@ function History() {
 
   async function fetchHistory() {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        "http://127.0.0.1:8000/detect/history"
+        "http://127.0.0.1:8000/detect/history",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setHistory(response.data);
@@ -46,7 +53,6 @@ function History() {
 
         </div>
 
-
         {/* Summary */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-7">
 
@@ -75,7 +81,6 @@ function History() {
 
           </div>
 
-
           {/* Record Type */}
           <div className="bg-blue-500/10 border border-blue-400/20 rounded-2xl p-6">
 
@@ -100,7 +105,6 @@ function History() {
             </div>
 
           </div>
-
 
           {/* Status */}
           <div className="bg-green-500/10 border border-green-400/20 rounded-2xl p-6">
@@ -129,7 +133,6 @@ function History() {
 
         </div>
 
-
         {/* History Table */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
 
@@ -157,7 +160,6 @@ function History() {
             </div>
 
           </div>
-
 
           {/* Table */}
           <div className="overflow-x-auto">
@@ -188,7 +190,6 @@ function History() {
 
               </thead>
 
-
               <tbody>
 
                 {history.length > 0 ? (
@@ -202,6 +203,7 @@ function History() {
 
                       {/* Image */}
                       <td className="p-4 text-slate-300">
+
                         <div className="flex items-center gap-3">
 
                           <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
@@ -213,8 +215,8 @@ function History() {
                           </span>
 
                         </div>
-                      </td>
 
+                      </td>
 
                       {/* Animal */}
                       <td className="p-4">
@@ -233,7 +235,6 @@ function History() {
 
                       </td>
 
-
                       {/* Confidence */}
                       <td className="p-4">
 
@@ -242,7 +243,6 @@ function History() {
                         </span>
 
                       </td>
-
 
                       {/* Date */}
                       <td className="p-4 text-slate-400 text-sm">
@@ -283,7 +283,6 @@ function History() {
           </div>
 
         </div>
-
 
         {/* Information */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">

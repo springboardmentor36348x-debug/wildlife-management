@@ -5,20 +5,26 @@ function Profile() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    const token = localStorage.getItem("token");
 
-    if (storedUser) {
+    if (token) {
       try {
-        setUser(JSON.parse(storedUser));
+        const payload = JSON.parse(atob(token.split(".")[1]));
+
+        setUser({
+          email: payload.sub,
+          role: payload.role,
+        });
       } catch (error) {
         console.error("Unable to read user information:", error);
       }
     }
   }, []);
 
-  const displayName = user?.full_name || user?.name || "Wildlife User";
   const email = user?.email || "Account email";
   const role = user?.role || "User";
+
+  const roleName = role.replace("_", " ");
 
   return (
     <div className="flex min-h-screen bg-[#0b1120]">
@@ -29,7 +35,6 @@ function Profile() {
 
         {/* Header */}
         <div className="mb-8">
-
           <p className="text-violet-400 text-sm font-semibold uppercase tracking-[0.2em]">
             Account Management
           </p>
@@ -41,9 +46,7 @@ function Profile() {
           <p className="text-slate-400 mt-2">
             Manage your account information and platform access.
           </p>
-
         </div>
-
 
         {/* Profile Header Card */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-8 shadow-xl">
@@ -55,8 +58,7 @@ function Profile() {
               👤
             </div>
 
-
-            {/* User information */}
+            {/* User Information */}
             <div className="flex-1">
 
               <p className="text-slate-500 text-sm uppercase tracking-wider">
@@ -64,7 +66,7 @@ function Profile() {
               </p>
 
               <h2 className="text-3xl font-bold text-white mt-1">
-                {displayName}
+                {roleName}
               </h2>
 
               <p className="text-slate-400 mt-2">
@@ -72,15 +74,13 @@ function Profile() {
               </p>
 
               <div className="mt-4">
-
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-500/10 border border-violet-400/20 text-violet-400 text-sm font-semibold">
 
                   <span className="w-2 h-2 bg-violet-400 rounded-full"></span>
 
-                  {role}
+                  {roleName}
 
                 </span>
-
               </div>
 
             </div>
@@ -88,7 +88,6 @@ function Profile() {
           </div>
 
         </div>
-
 
         {/* Account Information */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-7">
@@ -103,7 +102,6 @@ function Profile() {
               </div>
 
               <div>
-
                 <h2 className="text-xl font-bold text-white">
                   Personal Information
                 </h2>
@@ -111,29 +109,13 @@ function Profile() {
                 <p className="text-slate-500 text-sm mt-1">
                   Your registered account details
                 </p>
-
               </div>
 
             </div>
 
-
             <div className="space-y-5">
 
               <div>
-
-                <p className="text-slate-500 text-xs uppercase tracking-wider">
-                  Full Name
-                </p>
-
-                <p className="text-white font-medium mt-1">
-                  {displayName}
-                </p>
-
-              </div>
-
-
-              <div>
-
                 <p className="text-slate-500 text-xs uppercase tracking-wider">
                   Email Address
                 </p>
@@ -141,26 +123,21 @@ function Profile() {
                 <p className="text-white font-medium mt-1 break-all">
                   {email}
                 </p>
-
               </div>
 
-
               <div>
-
                 <p className="text-slate-500 text-xs uppercase tracking-wider">
                   Account Role
                 </p>
 
                 <p className="text-white font-medium mt-1 capitalize">
-                  {role}
+                  {roleName}
                 </p>
-
               </div>
 
             </div>
 
           </div>
-
 
           {/* Account Status */}
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-7">
@@ -172,7 +149,6 @@ function Profile() {
               </div>
 
               <div>
-
                 <h2 className="text-xl font-bold text-white">
                   Account Status
                 </h2>
@@ -180,11 +156,9 @@ function Profile() {
                 <p className="text-slate-500 text-sm mt-1">
                   Current platform access
                 </p>
-
               </div>
 
             </div>
-
 
             <div className="space-y-4">
 
@@ -204,7 +178,6 @@ function Profile() {
 
               </div>
 
-
               <div className="flex items-center justify-between bg-white/5 rounded-xl p-4">
 
                 <span className="text-slate-400">
@@ -217,7 +190,6 @@ function Profile() {
 
               </div>
 
-
               <div className="flex items-center justify-between bg-white/5 rounded-xl p-4">
 
                 <span className="text-slate-400">
@@ -225,7 +197,7 @@ function Profile() {
                 </span>
 
                 <span className="text-violet-400 font-semibold capitalize">
-                  {role}
+                  {roleName}
                 </span>
 
               </div>
@@ -235,7 +207,6 @@ function Profile() {
           </div>
 
         </div>
-
 
         {/* Platform Information */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">

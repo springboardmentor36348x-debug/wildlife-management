@@ -25,8 +25,15 @@ function Analytics() {
 
   const fetchAnalytics = async () => {
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.get(
-        "http://127.0.0.1:8000/analytics/"
+        "http://127.0.0.1:8000/analytics/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setAnalytics(response.data);
@@ -96,7 +103,6 @@ function Analytics() {
 
         </div>
 
-
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-7">
 
@@ -125,7 +131,6 @@ function Analytics() {
 
           </div>
 
-
           {/* Species Types */}
           <div className="bg-teal-500/10 border border-teal-400/20 rounded-2xl p-6">
 
@@ -150,7 +155,6 @@ function Analytics() {
             </div>
 
           </div>
-
 
           {/* Analysis */}
           <div className="bg-purple-500/10 border border-purple-400/20 rounded-2xl p-6">
@@ -179,7 +183,6 @@ function Analytics() {
 
         </div>
 
-
         {/* Species Table */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-7">
 
@@ -202,7 +205,6 @@ function Analytics() {
             </div>
 
           </div>
-
 
           <div className="overflow-x-auto">
 
@@ -269,7 +271,6 @@ function Analytics() {
 
         </div>
 
-
         {/* Bar Chart */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">
 
@@ -292,7 +293,6 @@ function Analytics() {
             </div>
 
           </div>
-
 
           <div className="w-full h-[380px]">
 
@@ -348,7 +348,6 @@ function Analytics() {
 
         </div>
 
-
         {/* Pie Chart */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">
 
@@ -372,7 +371,6 @@ function Analytics() {
             </div>
 
           </div>
-
 
           <div className="w-full h-[420px]">
 
@@ -421,7 +419,6 @@ function Analytics() {
           </div>
 
         </div>
-
 
         {/* Bottom Information */}
         <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 mt-7">

@@ -31,9 +31,16 @@ function Detection() {
     setResult(null);
 
     try {
+      const token = localStorage.getItem("token");
+
       const response = await axios.post(
         "http://127.0.0.1:8000/detect/image",
-        formData
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       setResult(response.data);
@@ -73,7 +80,7 @@ function Detection() {
         <div className="mb-8">
 
           <p className="text-cyan-400 text-sm font-semibold uppercase tracking-[0.2em]">
-            AI Vision Module
+            Wildlife Vision Module
           </p>
 
           <h1 className="text-4xl font-bold text-white mt-2">
@@ -81,15 +88,13 @@ function Detection() {
           </h1>
 
           <p className="text-slate-400 mt-2">
-            Upload an image and let the AI analyze the wildlife present in it.
+            Upload an image to analyze the wildlife present in it.
           </p>
 
         </div>
 
-
         {/* MAIN SECTION */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-7">
-
 
           {/* UPLOAD CARD */}
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 shadow-2xl">
@@ -113,7 +118,6 @@ function Detection() {
               </div>
 
             </div>
-
 
             {/* IMAGE AREA */}
             <label
@@ -159,7 +163,6 @@ function Detection() {
 
             </label>
 
-
             <input
               id="wildlife-image"
               type="file"
@@ -167,7 +170,6 @@ function Detection() {
               onChange={handleFileChange}
               className="hidden"
             />
-
 
             {/* FILE NAME */}
             {file && (
@@ -185,7 +187,6 @@ function Detection() {
               </div>
 
             )}
-
 
             {/* BUTTON */}
             <button
@@ -220,7 +221,6 @@ function Detection() {
 
           </div>
 
-
           {/* RESULT CARD */}
           <div className="bg-[#111827] border border-white/10 rounded-2xl p-7 shadow-2xl">
 
@@ -237,13 +237,12 @@ function Detection() {
                 </h2>
 
                 <p className="text-slate-400 text-sm">
-                  AI analysis output
+                  Wildlife analysis output
                 </p>
 
               </div>
 
             </div>
-
 
             {/* NO RESULT */}
             {!result && !loading && (
@@ -259,13 +258,12 @@ function Detection() {
                 </h3>
 
                 <p className="text-slate-400 mt-2 max-w-sm">
-                  Upload an image and start detection to view the AI result.
+                  Upload an image and start detection to view the result.
                 </p>
 
               </div>
 
             )}
-
 
             {/* LOADING */}
             {loading && (
@@ -281,13 +279,12 @@ function Detection() {
                 </h3>
 
                 <p className="text-slate-400 mt-2">
-                  AI is processing your wildlife image...
+                  Processing your wildlife image...
                 </p>
 
               </div>
 
             )}
-
 
             {/* RESULT */}
             {result && !loading && (
@@ -316,7 +313,6 @@ function Detection() {
 
                   </div>
 
-
                   {/* CONFIDENCE */}
                   <div className="mt-7">
 
@@ -331,7 +327,6 @@ function Detection() {
                       </span>
 
                     </div>
-
 
                     <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
 
@@ -350,7 +345,6 @@ function Detection() {
                   </div>
 
                 </div>
-
 
                 {/* ANALYZED IMAGE */}
                 {preview && (
@@ -383,7 +377,6 @@ function Detection() {
 
         </div>
 
-
         {/* FEATURE CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
 
@@ -403,7 +396,6 @@ function Detection() {
 
           </div>
 
-
           <div className="bg-purple-500/10 border border-purple-400/20 rounded-2xl p-6">
 
             <div className="text-3xl mb-4">
@@ -419,7 +411,6 @@ function Detection() {
             </p>
 
           </div>
-
 
           <div className="bg-amber-500/10 border border-amber-400/20 rounded-2xl p-6">
 

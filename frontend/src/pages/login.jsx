@@ -9,6 +9,10 @@ function Login() {
     e.preventDefault();
 
     try {
+      // Clear old session data
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+
       const response = await axios.post(
         "http://127.0.0.1:8000/users/login",
         {
@@ -23,12 +27,23 @@ function Login() {
       const token = response.data.access_token;
       localStorage.setItem("token", token);
 
-      // Read user role from JWT
+      // Read user information from JWT
       const payload = JSON.parse(atob(token.split(".")[1]));
+
       const role = payload.role;
+      const userEmail = payload.sub;
 
       // Store role
       localStorage.setItem("role", role);
+
+      // Store basic user information
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          email: userEmail,
+          role: role,
+        })
+      );
 
       alert("Login Successful");
 
@@ -42,6 +57,10 @@ function Login() {
       } else if (role === "admin") {
         window.location.href = "/dashboard";
       } else {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("user");
+
         alert("Invalid user role");
       }
 

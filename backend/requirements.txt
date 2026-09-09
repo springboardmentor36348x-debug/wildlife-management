@@ -39,7 +39,7 @@ ultralytics>=8.2.103   # YOLOv8 fallback detector
 # PRIMARY (birds): BirdNET covers 6,522 bird species globally, pretrained,
 # no training required.
 birdnetlib>=0.17.0
-tensorflow-cpu==2.15.1 # BirdNET-Analyzer CPU backend
+tensorflow-cpu==2.16.1  # BirdNET-Analyzer CPU backend
 
 # FALLBACK / feature extraction used regardless of which classifier tier fires
 librosa>=0.10.2

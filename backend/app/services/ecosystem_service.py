@@ -1,3 +1,6 @@
+from math import log
+from collections import Counter
+
 from sqlalchemy.orm import Session
 
 from app.models.detection import Detection
@@ -13,13 +16,14 @@ def get_ecosystem_health(db: Session):
 
     total_detections = len(detections)
 
-    species = set()
+    # Count actual detections for each species
+    species_counts = Counter()
 
     for detection in detections:
         if detection.animal:
-            species.add(detection.animal)
+            species_counts[detection.animal] += 1
 
-    species_richness = len(species)
+    species_richness = len(species_counts)
 
     # Project-defined weights
     weights = {
@@ -30,13 +34,39 @@ def get_ecosystem_health(db: Session):
         "environmental_conditions": 10
     }
 
-    # Calculate species diversity score from actual detection data
-    if species_richness > 0:
-        species_diversity_score = min(species_richness * 10, 100)
-    else:
-        species_diversity_score = 0
+    # ---------------------------------------------------------
+    # Species Diversity Score
+    # Uses Shannon diversity calculated from actual detections.
+    # ---------------------------------------------------------
 
-    # Other factors are not available yet
+    species_diversity_score = None
+
+    if species_richness > 1 and total_detections > 0:
+
+        shannon_index = 0.0
+
+        for count in species_counts.values():
+            proportion = count / total_detections
+
+            if proportion > 0:
+                shannon_index -= proportion * log(proportion)
+
+        maximum_diversity = log(species_richness)
+
+        if maximum_diversity > 0:
+            species_diversity_score = round(
+                (shannon_index / maximum_diversity) * 100,
+                2
+            )
+
+    elif species_richness == 1:
+        species_diversity_score = 0.0
+
+    # ---------------------------------------------------------
+    # Other factors require their corresponding real data.
+    # Do not assign artificial scores.
+    # ---------------------------------------------------------
+
     population_stability_score = None
     habitat_quality_score = None
     endangered_species_score = None
@@ -46,8 +76,9 @@ def get_ecosystem_health(db: Session):
         "species_diversity": {
             "weight": weights["species_diversity"],
             "score": species_diversity_score,
-            "available": total_detections > 0,
-            "species_richness": species_richness
+            "available": species_diversity_score is not None,
+            "species_richness": species_richness,
+            "total_detections": total_detections
         },
 
         "population_stability": {
@@ -75,25 +106,27 @@ def get_ecosystem_health(db: Session):
         }
     }
 
-    # Calculate overall score using only available factors
-    available_factors = [
-        factor for factor in factors.values()
-        if factor["score"] is not None
-    ]
+    # ---------------------------------------------------------
+    # Overall score
+    # Only calculate when all required factors are available.
+    # ---------------------------------------------------------
 
-    if available_factors:
-        total_weight = sum(
-            factor["weight"] for factor in available_factors
+    all_scores_available = all(
+        factor["score"] is not None
+        for factor in factors.values()
+    )
+
+    overall_score = None
+
+    if all_scores_available:
+
+        overall_score = round(
+            sum(
+                factor["score"] * factor["weight"]
+                for factor in factors.values()
+            ) / sum(weights.values()),
+            2
         )
-
-        weighted_score = sum(
-            factor["score"] * factor["weight"]
-            for factor in available_factors
-        )
-
-        overall_score = round(weighted_score / total_weight, 2)
-    else:
-        overall_score = None
 
     return {
         "overall_score": overall_score,
@@ -101,8 +134,9 @@ def get_ecosystem_health(db: Session):
         "factors": factors,
 
         "message": (
-            "Overall health score is calculated from the currently "
-            "available ecosystem data. Additional population, habitat, "
-            "conservation and environmental data can be included when available."
+            "Species diversity is calculated from actual wildlife "
+            "detection records using normalized Shannon diversity. "
+            "The overall ecosystem health score will be calculated "
+            "when all required assessment factors have valid data."
         )
     }

@@ -5,6 +5,7 @@ from app.models.detection import Detection
 
 def get_ecosystem_health(db: Session):
 
+    # Get actual wildlife detection records
     detections = (
         db.query(Detection)
         .filter(Detection.animal.isnot(None))
@@ -13,6 +14,7 @@ def get_ecosystem_health(db: Session):
 
     total_detections = len(detections)
 
+    # Get unique species from actual detection records
     species = set()
 
     for detection in detections:
@@ -21,7 +23,7 @@ def get_ecosystem_health(db: Session):
 
     species_richness = len(species)
 
-    # Project-defined assessment percentages
+    # Project-defined weights
     weights = {
         "species_diversity": 30,
         "population_stability": 25,
@@ -30,46 +32,77 @@ def get_ecosystem_health(db: Session):
         "environmental_conditions": 10
     }
 
-    # Each assessment factor uses its defined percentage.
+    # ---------------------------------------------------------
+    # Current factor scores
+    #
+    # Only calculate a score when the required real data and
+    # calculation method are available.
+    # ---------------------------------------------------------
+
+    species_diversity_score = None
+    population_stability_score = None
+    habitat_quality_score = None
+    endangered_species_score = None
+    environmental_conditions_score = None
+
     factors = {
+
         "species_diversity": {
             "weight": weights["species_diversity"],
-            "score": weights["species_diversity"],
-            "available": total_detections > 0,
+            "score": species_diversity_score,
+            "available": False,
             "species_richness": species_richness,
             "total_detections": total_detections
         },
 
         "population_stability": {
             "weight": weights["population_stability"],
-            "score": weights["population_stability"],
-            "available": True
+            "score": population_stability_score,
+            "available": False
         },
 
         "habitat_quality": {
             "weight": weights["habitat_quality"],
-            "score": weights["habitat_quality"],
-            "available": True
+            "score": habitat_quality_score,
+            "available": False
         },
 
         "endangered_species_status": {
             "weight": weights["endangered_species_status"],
-            "score": weights["endangered_species_status"],
-            "available": True
+            "score": endangered_species_score,
+            "available": False
         },
 
         "environmental_conditions": {
             "weight": weights["environmental_conditions"],
-            "score": weights["environmental_conditions"],
-            "available": True
+            "score": environmental_conditions_score,
+            "available": False
         }
     }
 
-    # Overall assessment = sum of the five defined percentages
-    overall_score = sum(
-        factor["score"]
+    # ---------------------------------------------------------
+    # Overall score
+    #
+    # Do NOT calculate an overall score until all five
+    # component scores are available.
+    # ---------------------------------------------------------
+
+    all_scores_available = all(
+        factor["score"] is not None
         for factor in factors.values()
     )
+
+    overall_score = None
+
+    if all_scores_available:
+
+        overall_score = round(
+            sum(
+                factor["score"] * factor["weight"]
+                for factor in factors.values()
+            ) / sum(weights.values()),
+            2
+        )
 
     return {
         "overall_score": overall_score,
@@ -77,7 +110,10 @@ def get_ecosystem_health(db: Session):
         "factors": factors,
 
         "message": (
-            "Ecosystem health assessment is based on the "
-            "project-defined weighted assessment model."
+            "The ecosystem health score requires valid data for "
+            "species diversity, population stability, habitat quality, "
+            "endangered species status and environmental conditions. "
+            "The available wildlife detection data currently provides "
+            "species richness and observation counts."
         )
     }

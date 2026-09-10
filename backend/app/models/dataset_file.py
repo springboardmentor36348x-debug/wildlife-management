@@ -1,7 +1,6 @@
 """
 DatasetFile model - tracks real uploaded files (images/audio/csv) attached
-to a registered Dataset, so the dataset registry isn't just metadata but
-actually holds sample/real files that can be viewed and downloaded.
+to a registered Dataset.
 """
 import uuid
 from datetime import datetime, timezone

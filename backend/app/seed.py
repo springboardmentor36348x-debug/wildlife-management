@@ -15,7 +15,6 @@ Safe to re-run: skips anything that already exists.
 import sys
 from pathlib import Path
 
-# Add backend directory to sys.path so running directly works
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from datetime import datetime, timezone, timedelta
@@ -84,7 +83,7 @@ DEMO_SITES = [
         "site_name": "Serengeti North Ridge Cam 1",
         "latitude": -2.3333,
         "longitude": 34.8333,
-        "habitat_type": HabitatType.SAVANNA if hasattr(HabitatType, "SAVANNA") else HabitatType.GRASSLAND,
+        "habitat_type": HabitatType.GRASSLAND,
         "monitoring_device": MonitoringDevice.CAMERA_TRAP,
         "protected_area": "Serengeti National Park",
         "observations": [

@@ -12,4 +12,3 @@ from app.models.incident import (  # noqa: F401
     RestorationActionRecord, ActionStatus,
     GeneratedReport, ReportFormat, ReportType
 )
-

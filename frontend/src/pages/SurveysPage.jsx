@@ -1,364 +1,147 @@
-import { useEffect, Fragment, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
-import { StatusBadge } from "../components/Badges";
-import EcosystemHealthBadge from "../components/EcosystemHealthBadge";
-
-const HABITAT_TYPES = ["forest", "grassland", "wetland", "riverine", "mountain", "marine", "other"];
-const DEVICE_TYPES = ["camera_trap", "drone", "audio_sensor", "satellite", "manual_survey"];
-
-const CAN_MANAGE = ["administrator", "researcher", "forest_department"];
 
 export default function SurveysPage() {
   const { user } = useAuth();
-  const canManage = CAN_MANAGE.includes(user.role);
-
   const [surveys, setSurveys] = useState([]);
   const [sites, setSites] = useState([]);
-  const [siteHealth, setSiteHealth] = useState({});
-  const [surveyRecommendation, setSurveyRecommendation] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [showSurveyForm, setShowSurveyForm] = useState(false);
+  const [showSiteForm, setShowSiteForm] = useState(false);
+  const [surveyForm, setSurveyForm] = useState({ name: "", description: "", protected_area: "", start_date: "" });
+  const [siteForm, setSiteForm] = useState({ survey_id: "", site_name: "", latitude: "", longitude: "", habitat_type: "other", monitoring_device: "camera_trap", protected_area: "" });
   const [error, setError] = useState("");
-  const [selectedSurvey, setSelectedSurvey] = useState("");
+  const canManage = ["administrator", "researcher", "forest_department"].includes(user?.role);
 
-  const [surveyForm, setSurveyForm] = useState({
-    name: "",
-    protected_area: "",
-    description: "",
-    start_date: "",
-  });
-  const [siteForm, setSiteForm] = useState({
-    survey_id: "",
-    site_name: "",
-    latitude: "",
-    longitude: "",
-    habitat_type: "forest",
-    monitoring_device: "camera_trap",
-    protected_area: "",
-  });
-
-  async function refresh() {
-    setLoading(true);
-    try {
-      const [s, m, health] = await Promise.all([
-        api.listSurveys(),
-        api.listAllSites(),
-        api.getHealthScoreAllSites().catch(() => []),
-      ]);
-      setSurveys(s);
-      setSites(m);
-      setSiteHealth(Object.fromEntries((health || []).map((h) => [h.site_id, h])));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => { load(); }, []);
+  function load() {
+    api.listSurveys().then(setSurveys).catch(() => {});
+    api.listAllSites().then(setSites).catch(() => {});
   }
 
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  useEffect(() => {
-    if (!selectedSurvey) {
-      setSurveyRecommendation(null);
-      return;
-    }
-    const surveySites = sites.filter((s) => s.survey_id === selectedSurvey);
-    if (surveySites.length === 0) {
-      setSurveyRecommendation(null);
-      return;
-    }
-    api
-      .getResourceAllocation()
-      .then((rows) => {
-        const match = rows.find((r) => surveySites.some((s) => s.id === r.site_id));
-        setSurveyRecommendation(match || null);
-      })
-      .catch(() => setSurveyRecommendation(null));
-  }, [selectedSurvey, sites]);
-
-  async function handleCreateSurvey(e) {
+  async function createSurvey(e) {
     e.preventDefault();
     setError("");
     try {
-      await api.createSurvey({
-        ...surveyForm,
-        start_date: new Date(surveyForm.start_date).toISOString(),
-      });
-      setSurveyForm({ name: "", protected_area: "", description: "", start_date: "" });
-      refresh();
-    } catch (e) {
-      setError(e.message);
-    }
+      await api.createSurvey({ ...surveyForm, start_date: new Date(surveyForm.start_date).toISOString() });
+      setShowSurveyForm(false);
+      setSurveyForm({ name: "", description: "", protected_area: "", start_date: "" });
+      load();
+    } catch (err) { setError(err.message); }
   }
 
-  async function handleCreateSite(e) {
+  async function createSite(e) {
     e.preventDefault();
     setError("");
     try {
-      await api.createSite({
-        ...siteForm,
-        latitude: parseFloat(siteForm.latitude),
-        longitude: parseFloat(siteForm.longitude),
-      });
-      setSiteForm({
-        survey_id: siteForm.survey_id,
-        site_name: "",
-        latitude: "",
-        longitude: "",
-        habitat_type: "forest",
-        monitoring_device: "camera_trap",
-        protected_area: "",
-      });
-      refresh();
-    } catch (e) {
-      setError(e.message);
-    }
+      await api.createSite({ ...siteForm, latitude: parseFloat(siteForm.latitude), longitude: parseFloat(siteForm.longitude) });
+      setShowSiteForm(false);
+      setSiteForm({ survey_id: "", site_name: "", latitude: "", longitude: "", habitat_type: "other", monitoring_device: "camera_trap", protected_area: "" });
+      load();
+    } catch (err) { setError(err.message); }
   }
-
-  const filteredSites = selectedSurvey
-    ? sites.filter((s) => s.survey_id === selectedSurvey)
-    : sites;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-bark-900">Surveys &amp; Monitoring Sites</h1>
-        <p className="text-canopy-700 text-sm mt-1">
-          Multi-zone monitoring surveys with GPS-tagged camera, drone, and audio nodes.
-        </p>
+    <div>
+      <div className="page-header flex items-center justify-between">
+        <div>
+          <h1>📍 Surveys & Monitoring Sites</h1>
+          <p>Manage field surveys and their monitoring site networks.</p>
+        </div>
+        {canManage && (
+          <div className="flex gap-2">
+            <button className="btn btn-primary btn-sm" onClick={() => setShowSurveyForm(!showSurveyForm)}>+ Survey</button>
+            <button className="btn btn-secondary btn-sm" onClick={() => setShowSiteForm(!showSiteForm)}>+ Site</button>
+          </div>
+        )}
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-          {error}
+      {error && <div className="auth-error mb-4">{error}</div>}
+
+      {/* Survey Creation Form */}
+      {showSurveyForm && (
+        <div className="card mb-4">
+          <h3 className="section-title">New Survey</h3>
+          <form onSubmit={createSurvey} className="grid grid-2">
+            <div className="form-group"><label className="form-label">Name</label><input className="form-input" value={surveyForm.name} onChange={(e) => setSurveyForm({ ...surveyForm, name: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Protected Area</label><input className="form-input" value={surveyForm.protected_area} onChange={(e) => setSurveyForm({ ...surveyForm, protected_area: e.target.value })} /></div>
+            <div className="form-group"><label className="form-label">Start Date</label><input type="datetime-local" className="form-input" value={surveyForm.start_date} onChange={(e) => setSurveyForm({ ...surveyForm, start_date: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Description</label><input className="form-input" value={surveyForm.description} onChange={(e) => setSurveyForm({ ...surveyForm, description: e.target.value })} /></div>
+            <div style={{ gridColumn: "span 2" }}><button type="submit" className="btn btn-primary">Create Survey</button></div>
+          </form>
         </div>
       )}
 
-      {canManage && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <form onSubmit={handleCreateSurvey} className="card p-5 space-y-3">
-            <h2 className="font-display font-semibold text-bark-900">Register a New Survey</h2>
-            <div>
-              <label className="label">Survey name</label>
-              <input
-                className="input"
-                required
-                value={surveyForm.name}
-                onChange={(e) => setSurveyForm((f) => ({ ...f, name: e.target.value }))}
-                placeholder="e.g. Kaziranga Rhino Census 2026"
-              />
-            </div>
-            <div>
-              <label className="label">Protected area</label>
-              <input
-                className="input"
-                value={surveyForm.protected_area}
-                onChange={(e) => setSurveyForm((f) => ({ ...f, protected_area: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="label">Start date</label>
-              <input
-                type="date"
-                required
-                className="input"
-                value={surveyForm.start_date}
-                onChange={(e) => setSurveyForm((f) => ({ ...f, start_date: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="label">Description</label>
-              <textarea
-                className="input"
-                rows={2}
-                value={surveyForm.description}
-                onChange={(e) => setSurveyForm((f) => ({ ...f, description: e.target.value }))}
-              />
-            </div>
-            <button className="btn-primary w-full">Create survey</button>
-          </form>
-
-          <form onSubmit={handleCreateSite} className="card p-5 space-y-3">
-            <h2 className="font-display font-semibold text-bark-900">Register a Monitoring Site</h2>
-            <div>
-              <label className="label">Parent survey</label>
-              <select
-                className="input"
-                required
-                value={siteForm.survey_id}
-                onChange={(e) => setSiteForm((f) => ({ ...f, survey_id: e.target.value }))}
-              >
-                <option value="">Select a survey…</option>
-                {surveys.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
+      {/* Site Creation Form */}
+      {showSiteForm && (
+        <div className="card mb-4">
+          <h3 className="section-title">New Monitoring Site</h3>
+          <form onSubmit={createSite} className="grid grid-3">
+            <div className="form-group"><label className="form-label">Survey</label>
+              <select className="form-select" value={siteForm.survey_id} onChange={(e) => setSiteForm({ ...siteForm, survey_id: e.target.value })} required>
+                <option value="">Select survey…</option>
+                {surveys.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            <div>
-              <label className="label">Site name</label>
-              <input
-                className="input"
-                required
-                value={siteForm.site_name}
-                onChange={(e) => setSiteForm((f) => ({ ...f, site_name: e.target.value }))}
-                placeholder="e.g. North Camera Node 1"
-              />
+            <div className="form-group"><label className="form-label">Site Name</label><input className="form-input" value={siteForm.site_name} onChange={(e) => setSiteForm({ ...siteForm, site_name: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Latitude</label><input type="number" step="any" className="form-input" value={siteForm.latitude} onChange={(e) => setSiteForm({ ...siteForm, latitude: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Longitude</label><input type="number" step="any" className="form-input" value={siteForm.longitude} onChange={(e) => setSiteForm({ ...siteForm, longitude: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Habitat Type</label>
+              <select className="form-select" value={siteForm.habitat_type} onChange={(e) => setSiteForm({ ...siteForm, habitat_type: e.target.value })}>
+                {["forest","grassland","wetland","riverine","mountain","marine","other"].map((h) => <option key={h} value={h}>{h}</option>)}
+              </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Latitude</label>
-                <input
-                  className="input"
-                  type="number"
-                  step="any"
-                  required
-                  value={siteForm.latitude}
-                  onChange={(e) => setSiteForm((f) => ({ ...f, latitude: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label className="label">Longitude</label>
-                <input
-                  className="input"
-                  type="number"
-                  step="any"
-                  required
-                  value={siteForm.longitude}
-                  onChange={(e) => setSiteForm((f) => ({ ...f, longitude: e.target.value }))}
-                />
-              </div>
+            <div className="form-group"><label className="form-label">Device Type</label>
+              <select className="form-select" value={siteForm.monitoring_device} onChange={(e) => setSiteForm({ ...siteForm, monitoring_device: e.target.value })}>
+                {["camera_trap","drone","audio_sensor","satellite","manual_survey"].map((d) => <option key={d} value={d}>{d.replace(/_/g, " ")}</option>)}
+              </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">Habitat type</label>
-                <select
-                  className="input"
-                  value={siteForm.habitat_type}
-                  onChange={(e) => setSiteForm((f) => ({ ...f, habitat_type: e.target.value }))}
-                >
-                  {HABITAT_TYPES.map((h) => (
-                    <option key={h} value={h}>{h.replace("_", " ")}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="label">Monitoring device</label>
-                <select
-                  className="input"
-                  value={siteForm.monitoring_device}
-                  onChange={(e) => setSiteForm((f) => ({ ...f, monitoring_device: e.target.value }))}
-                >
-                  {DEVICE_TYPES.map((d) => (
-                    <option key={d} value={d}>{d.replace("_", " ")}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <button className="btn-primary w-full">Register site</button>
+            <div style={{ gridColumn: "span 3" }}><button type="submit" className="btn btn-primary">Create Site</button></div>
           </form>
         </div>
       )}
 
-      <div className="card p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display font-semibold text-bark-900">All Surveys</h2>
-        </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-canopy-500 border-b border-canopy-100">
-              <th className="py-2">Name</th>
-              <th className="py-2">Protected Area</th>
-              <th className="py-2">Status</th>
-              <th className="py-2">Start Date</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-canopy-100">
-            {surveys.map((s) => (
-              <Fragment key={s.id}>
-                <tr
-                  key={s.id}
-                  className={`cursor-pointer hover:bg-canopy-50 ${selectedSurvey === s.id ? "bg-canopy-50" : ""}`}
-                  onClick={() => setSelectedSurvey(selectedSurvey === s.id ? "" : s.id)}
-                >
-                  <td className="py-2 font-medium text-bark-900">{s.name}</td>
-                  <td className="py-2 text-canopy-700">{s.protected_area || "—"}</td>
-                  <td className="py-2"><StatusBadge status={s.status} /></td>
-                  <td className="py-2 text-canopy-700">{new Date(s.start_date).toLocaleDateString()}</td>
+      {/* Surveys Table */}
+      <div className="card mb-4">
+        <h3 className="section-title">🗂️ Surveys ({surveys.length})</h3>
+        <div className="table-container">
+          <table>
+            <thead><tr><th>Name</th><th>Protected Area</th><th>Status</th><th>Start Date</th></tr></thead>
+            <tbody>
+              {surveys.map((s) => (
+                <tr key={s.id}>
+                  <td className="font-semibold">{s.name}</td>
+                  <td className="text-muted">{s.protected_area || "—"}</td>
+                  <td><span className={`badge ${s.status === "active" ? "badge-emerald" : s.status === "completed" ? "badge-cyan" : "badge-amber"}`}>{s.status}</span></td>
+                  <td className="font-mono text-xs">{new Date(s.start_date).toLocaleDateString()}</td>
                 </tr>
-                {selectedSurvey === s.id && surveyRecommendation && (
-                  <tr key={`${s.id}-detail`} className="bg-canopy-50/60">
-                    <td colSpan={4} className="py-3 px-2">
-                      <div className="flex flex-wrap items-center gap-3 text-xs">
-                        <span className="font-medium text-bark-900">Ecosystem health snapshot:</span>
-                        {(() => {
-                          const health = siteHealth[surveyRecommendation.site_id];
-                          return health ? (
-                            <EcosystemHealthBadge score={health.ecosystem_health_score} status={health.conservation_status} size="sm" />
-                          ) : (
-                            <span className="text-canopy-600">No score yet</span>
-                          );
-                        })()}
-                        <span className="text-canopy-700">
-                          Top recommendation: {surveyRecommendation.recommended_action}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
-        {surveys.length === 0 && !loading && (
-          <p className="text-sm text-canopy-600 py-4">No surveys registered yet.</p>
-        )}
+              ))}
+              {surveys.length === 0 && <tr><td colSpan={4} className="text-center text-muted p-4">No surveys yet. Create one above.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="card p-5">
-        <h2 className="font-display font-semibold text-bark-900 mb-4">
-          Monitoring Sites {selectedSurvey && "(filtered by selected survey)"}
-        </h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-canopy-500 border-b border-canopy-100">
-              <th className="py-2">Site</th>
-              <th className="py-2">Habitat</th>
-              <th className="py-2">Device</th>
-              <th className="py-2">Coordinates</th>
-              <th className="py-2">Ecosystem Health</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-canopy-100">
-            {filteredSites.map((site) => (
-              <tr key={site.id}>
-                <td className="py-2 font-medium text-bark-900">{site.site_name}</td>
-                <td className="py-2 text-canopy-700 capitalize">{site.habitat_type.replace("_", " ")}</td>
-                <td className="py-2 text-canopy-700 capitalize">{site.monitoring_device.replace("_", " ")}</td>
-                <td className="py-2 text-canopy-700">
-                  {site.latitude.toFixed(4)}, {site.longitude.toFixed(4)}
-                </td>
-                <td className="py-2">
-                  {siteHealth[site.id] ? (
-                    <EcosystemHealthBadge
-                      score={siteHealth[site.id].ecosystem_health_score}
-                      status={siteHealth[site.id].conservation_status}
-                      size="sm"
-                    />
-                  ) : (
-                    <span className="text-xs text-canopy-500">No score yet</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {filteredSites.length === 0 && !loading && (
-          <p className="text-sm text-canopy-600 py-4">No monitoring sites registered yet.</p>
-        )}
+      {/* Sites Table */}
+      <div className="card">
+        <h3 className="section-title">📡 Monitoring Sites ({sites.length})</h3>
+        <div className="table-container">
+          <table>
+            <thead><tr><th>Site Name</th><th>Habitat</th><th>Device</th><th>Coordinates</th><th>Status</th></tr></thead>
+            <tbody>
+              {sites.map((s) => (
+                <tr key={s.id}>
+                  <td className="font-semibold">{s.site_name}</td>
+                  <td><span className="badge badge-blue">{s.habitat_type}</span></td>
+                  <td className="text-muted text-xs">{s.monitoring_device?.replace(/_/g, " ")}</td>
+                  <td className="font-mono text-xs">{s.latitude?.toFixed(4)}, {s.longitude?.toFixed(4)}</td>
+                  <td><span className={`badge ${s.is_active === "true" ? "badge-emerald" : "badge-rose"}`}>{s.is_active === "true" ? "Active" : "Inactive"}</span></td>
+                </tr>
+              ))}
+              {sites.length === 0 && <tr><td colSpan={5} className="text-center text-muted p-4">No monitoring sites registered.</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

@@ -5,8 +5,9 @@ export function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-canopy-900">
-        <p className="text-canopy-200 text-sm">Loading…</p>
+      <div className="loading-page">
+        <div className="spinner" style={{ width: 32, height: 32 }}></div>
+        <p style={{ fontSize: "0.85rem" }}>Loading…</p>
       </div>
     );
   }
@@ -18,10 +19,10 @@ export function RoleRoute({ roles, children }) {
   const { user } = useAuth();
   if (!roles.includes(user.role)) {
     return (
-      <div className="card p-8 text-center">
-        <h2 className="font-display text-xl font-semibold text-bark-900 mb-2">Access restricted</h2>
-        <p className="text-sm text-canopy-700">
-          Your role ({user.role.replace("_", " ")}) does not have permission to view this page.
+      <div className="card" style={{ padding: "3rem", textAlign: "center" }}>
+        <h2 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>Access Restricted</h2>
+        <p className="text-muted">
+          Your role ({user.role.replace(/_/g, " ")}) does not have permission to view this page.
         </p>
       </div>
     );

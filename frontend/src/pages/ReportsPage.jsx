@@ -1,467 +1,110 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api/client";
-import {
-  FileSpreadsheet,
-  Download,
-  FileText,
-  Filter,
-  CheckCircle,
-  Clock,
-  Sparkles,
-  RefreshCw,
-  Plus,
-  Compass,
-  PawPrint,
-  Trees,
-  Shield,
-  Layers,
-  Check,
-} from "lucide-react";
-
-function StatusPill({ status }) {
-  const cls = status === "processed" ? "badge-ok" : "badge-med";
-  return <span className={`badge ${cls}`}>{status === "processed" ? "Processed" : "Queued"}</span>;
-}
 
 export default function ReportsPage() {
-  const [reportTypes, setReportTypes] = useState([]);
-  const [reportHistory, setReportHistory] = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [records, setRecords] = useState([]);
-  const [surveys, setSurveys] = useState([]);
-  const [sites, setSites] = useState([]);
-
-  // Generation form state
-  const [selectedType, setSelectedType] = useState("wildlife_survey");
-  const [selectedFormat, setSelectedFormat] = useState("pdf"); // pdf | excel
-  const [customTitle, setCustomTitle] = useState("");
-  const [filterSurveyId, setFilterSurveyId] = useState("");
-  const [filterSiteId, setFilterSiteId] = useState("");
-  const [filterSpecies, setFilterSpecies] = useState("");
-
+  const [types, setTypes] = useState([]);
+  const [history, setHistory] = useState([]);
+  const [form, setForm] = useState({ title: "", report_type: "wildlife_survey", format: "pdf" });
   const [generating, setGenerating] = useState(false);
-  const [downloadingId, setDownloadingId] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
-  const loadData = () => {
-    setLoading(true);
-    setError("");
-
-    Promise.all([
-      api.getReportTypes().catch(() => []),
-      api.listReportHistory(50).catch(() => []),
-      api.getReportSummary().catch(() => null),
-      api.listReportRecords(30).catch(() => []),
-      api.listSurveys().catch(() => []),
-      api.listAllSites().catch(() => []),
-    ])
-      .then(([types, history, sum, recs, surv, st]) => {
-        setReportTypes(types || []);
-        setReportHistory(history || []);
-        setSummary(sum);
-        setRecords(recs || []);
-        setSurveys(surv || []);
-        setSites(st || []);
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
-  };
 
   useEffect(() => {
-    loadData();
+    api.getReportTypes().then(setTypes).catch(() => {});
+    loadHistory();
   }, []);
 
-  const handleGenerateReport = async (e) => {
+  function loadHistory() {
+    api.listReportHistory().then(setHistory).catch(() => {});
+  }
+
+  async function handleGenerate(e) {
     e.preventDefault();
     setGenerating(true);
     setError("");
-    setSuccessMessage("");
-
     try {
-      const generated = await api.generateReport({
-        title: customTitle || undefined,
-        report_type: selectedType,
-        format: selectedFormat,
-        filters: {
-          survey_id: filterSurveyId || undefined,
-          site_id: filterSiteId || undefined,
-          species: filterSpecies || undefined,
-        },
-      });
-
-      setReportHistory([generated, ...reportHistory]);
-      setSuccessMessage(`Successfully generated "${generated.title}"! Initiating automatic download...`);
-      setCustomTitle("");
-
-      // Trigger download
-      await api.triggerReportDownload(
-        generated.id,
-        `${generated.title}.${generated.file_format === "pdf" ? "pdf" : "xlsx"}`
-      );
+      await api.generateReport(form);
+      setForm({ ...form, title: "" });
+      loadHistory();
     } catch (err) {
-      setError(`Failed to generate report: ${err.message}`);
+      setError(err.message);
     } finally {
       setGenerating(false);
     }
-  };
+  }
 
-  const handleDownloadReport = async (report) => {
-    setDownloadingId(report.id);
+  async function handleDownload(id, filename) {
     try {
-      await api.triggerReportDownload(
-        report.id,
-        `${report.title}.${report.file_format === "pdf" ? "pdf" : "xlsx"}`
-      );
-      // update local download count
-      setReportHistory(
-        reportHistory.map((r) =>
-          r.id === report.id ? { ...r, download_count: (r.download_count || 0) + 1 } : r
-        )
-      );
+      await api.triggerReportDownload(id, filename);
     } catch (err) {
-      alert(`Download failed: ${err.message}`);
-    } finally {
-      setDownloadingId(null);
+      alert("Download failed: " + err.message);
     }
-  };
-
-  const reportTypeIcons = {
-    wildlife_survey: Compass,
-    species_population: PawPrint,
-    biodiversity: Sparkles,
-    habitat_assessment: Trees,
-    conservation: Shield,
-  };
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-canopy-900 via-canopy-800 to-canopy-950 p-6 rounded-2xl text-white shadow-sm border border-canopy-700 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <span className="p-2 bg-ochre-400/20 text-ochre-300 rounded-lg">
-              <FileSpreadsheet className="w-5 h-5" />
-            </span>
-            <h1 className="font-display text-2xl font-bold tracking-tight">Reports &amp; Export System</h1>
-          </div>
-          <p className="text-canopy-200 text-sm mt-1 max-w-2xl">
-            Generate formal, audit-ready PDF dossiers and multi-sheet Excel workbooks with live data from all intelligence engines.
-          </p>
-        </div>
-
-        <button
-          onClick={loadData}
-          className="btn-secondary text-xs py-2 px-3 flex items-center gap-1.5 self-start md:self-auto bg-white/10 hover:bg-white/20 text-white border-white/20"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-          <span>Refresh Records</span>
-        </button>
+    <div>
+      <div className="page-header">
+        <h1>📄 Reports & Export System</h1>
+        <p>Generate analytical reports for stakeholders in PDF or Excel format.</p>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-4">{error}</div>
-      )}
-
-      {successMessage && (
-        <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-xl p-4 flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span>{successMessage}</span>
-        </div>
-      )}
-
-      {/* Summary KPI Cards */}
-      {summary && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <div className="card p-4">
-            <p className="text-xs uppercase tracking-wide text-canopy-500 font-semibold">Images Processed</p>
-            <p className="font-display text-2xl font-bold text-bark-900 mt-1">{summary.images_analyzed}</p>
-          </div>
-          <div className="card p-4">
-            <p className="text-xs uppercase tracking-wide text-canopy-500 font-semibold">Audio Clips</p>
-            <p className="font-display text-2xl font-bold text-bark-900 mt-1">{summary.audio_clips}</p>
-          </div>
-          <div className="card p-4">
-            <p className="text-xs uppercase tracking-wide text-canopy-500 font-semibold">Species Confirmed</p>
-            <p className="font-display text-2xl font-bold text-bark-900 mt-1">{summary.species_confirmed}</p>
-          </div>
-          <div className="card p-4">
-            <p className="text-xs uppercase tracking-wide text-canopy-500 font-semibold">Active Surveys</p>
-            <p className="font-display text-2xl font-bold text-bark-900 mt-1">{summary.total_surveys}</p>
-          </div>
-          <div className="card p-4">
-            <p className="text-xs uppercase tracking-wide text-canopy-500 font-semibold">Generated Reports</p>
-            <p className="font-display text-2xl font-bold text-bark-900 mt-1">{reportHistory.length}</p>
-          </div>
-        </div>
-      )}
-
-      {/* ================= REPORT GENERATION STUDIO ================= */}
-      <div className="card p-6 border-canopy-200">
-        <h2 className="font-display font-bold text-bark-900 text-lg mb-1">Generate New Structured Report</h2>
-        <p className="text-xs text-canopy-600 mb-6">
-          Select a report template, target format, and optional scope filters. Reports compile live data with zero mock placeholders.
-        </p>
-
-        <form onSubmit={handleGenerateReport} className="space-y-6">
-          {/* Step 1: Select Report Type */}
-          <div>
-            <label className="label mb-2">1. Select Report Template</label>
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-              {[
-                { type: "wildlife_survey", name: "Wildlife Survey", desc: "Survey logs & device telemetry", icon: Compass },
-                { type: "species_population", name: "Species Population", desc: "Counts, density & trend", icon: PawPrint },
-                { type: "biodiversity", name: "Biodiversity Score", desc: "Ecosystem health & richness", icon: Sparkles },
-                { type: "habitat_assessment", name: "Habitat Assessment", desc: "Vegetation & degradation", icon: Trees },
-                { type: "conservation", name: "Conservation Action", desc: "Priorities & threat alerts", icon: Shield },
-              ].map(({ type, name, desc, icon: Icon }) => {
-                const isSelected = selectedType === type;
-                return (
-                  <button
-                    type="button"
-                    key={type}
-                    onClick={() => setSelectedType(type)}
-                    className={`p-3.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                      isSelected
-                        ? "bg-canopy-900 text-white border-canopy-900 shadow-md ring-2 ring-ochre-400"
-                        : "bg-white text-bark-800 border-canopy-200 hover:border-canopy-400"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className={`p-1.5 rounded-lg ${isSelected ? "bg-white/20 text-white" : "bg-canopy-100 text-canopy-800"}`}>
-                          <Icon className="w-4 h-4" />
-                        </span>
-                        {isSelected && <Check className="w-4 h-4 text-ochre-400" />}
-                      </div>
-                      <p className="font-display font-bold text-xs leading-snug">{name}</p>
-                      <p className={`text-[11px] mt-1 leading-tight ${isSelected ? "text-canopy-200" : "text-canopy-600"}`}>
-                        {desc}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })}
+      <div className="grid grid-2">
+        <div className="card">
+          <h3 className="section-title">Generate Report</h3>
+          {error && <div className="auth-error mb-3">{error}</div>}
+          <form onSubmit={handleGenerate}>
+            <div className="form-group">
+              <label className="form-label">Report Title</label>
+              <input className="form-input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="E.g. Q3 Serengeti Census" required />
             </div>
-          </div>
-
-          {/* Step 2: Format & Custom Title */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="label">2. Export File Format</label>
-              <div className="grid grid-cols-2 gap-3 mt-1">
-                <label
-                  className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer text-xs font-semibold transition-colors ${
-                    selectedFormat === "pdf"
-                      ? "bg-red-50/80 border-red-300 text-red-900 ring-1 ring-red-400"
-                      : "bg-white border-canopy-200 text-bark-700"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="report_format"
-                    value="pdf"
-                    checked={selectedFormat === "pdf"}
-                    onChange={() => setSelectedFormat("pdf")}
-                  />
-                  <span>PDF Document (.pdf)</span>
+            <div className="form-group">
+              <label className="form-label">Report Type</label>
+              <select className="form-select" value={form.report_type} onChange={(e) => setForm({ ...form, report_type: e.target.value })}>
+                {types.map(t => <option key={t.type} value={t.type}>{t.name}</option>)}
+              </select>
+              <p className="text-xs text-muted mt-1">{types.find(t => t.type === form.report_type)?.description}</p>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Format</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2" style={{ cursor: "pointer" }}>
+                  <input type="radio" name="format" value="pdf" checked={form.format === "pdf"} onChange={(e) => setForm({ ...form, format: e.target.value })} />
+                  <span className="text-sm font-semibold">PDF Document</span>
                 </label>
-
-                <label
-                  className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer text-xs font-semibold transition-colors ${
-                    selectedFormat === "excel"
-                      ? "bg-emerald-50/80 border-emerald-300 text-emerald-900 ring-1 ring-emerald-400"
-                      : "bg-white border-canopy-200 text-bark-700"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="report_format"
-                    value="excel"
-                    checked={selectedFormat === "excel"}
-                    onChange={() => setSelectedFormat("excel")}
-                  />
-                  <span>Excel Workbook (.xlsx)</span>
+                <label className="flex items-center gap-2" style={{ cursor: "pointer" }}>
+                  <input type="radio" name="format" value="excel" checked={form.format === "excel"} onChange={(e) => setForm({ ...form, format: e.target.value })} />
+                  <span className="text-sm font-semibold">Excel Spreadsheet</span>
                 </label>
               </div>
             </div>
-
-            <div>
-              <label className="label">Custom Report Title (Optional)</label>
-              <input
-                type="text"
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="e.g. Q3 Serengeti Corridor Biodiversity Dossier"
-                className="input mt-1"
-              />
-            </div>
-          </div>
-
-          {/* Step 3: Scope Filters */}
-          <div>
-            <label className="label">3. Scope Filters (Optional)</label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-1 text-xs">
-              <select
-                value={filterSurveyId}
-                onChange={(e) => setFilterSurveyId(e.target.value)}
-                className="input"
-              >
-                <option value="">All Surveys (System-wide)</option>
-                {surveys.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                value={filterSiteId}
-                onChange={(e) => setFilterSiteId(e.target.value)}
-                className="input"
-              >
-                <option value="">All Monitoring Sites</option>
-                {sites.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.site_name}
-                  </option>
-                ))}
-              </select>
-
-              <input
-                type="text"
-                value={filterSpecies}
-                onChange={(e) => setFilterSpecies(e.target.value)}
-                placeholder="Filter by species (e.g. elephant)"
-                className="input"
-              />
-            </div>
-          </div>
-
-          {/* Submit Action */}
-          <div className="flex items-center justify-end pt-3 border-t border-canopy-100">
-            <button
-              type="submit"
-              disabled={generating}
-              className="btn-primary text-xs py-2.5 px-6 flex items-center gap-2 shadow-md"
-            >
-              {generating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-ochre-400" />
-                  <span>Compiling &amp; Exporting Data...</span>
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4 text-ochre-400" />
-                  <span>Generate &amp; Download {selectedFormat.toUpperCase()}</span>
-                </>
-              )}
+            <button type="submit" className="btn btn-primary w-full mt-2" disabled={generating}>
+              {generating ? "Generating…" : "Generate Report"}
             </button>
-          </div>
-        </form>
-      </div>
-
-      {/* ================= REPORT ARCHIVE / HISTORY ================= */}
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-4 pb-3 border-b border-canopy-100">
-          <div>
-            <h2 className="font-display font-bold text-bark-900 text-lg">Generated Reports Archive</h2>
-            <p className="text-xs text-canopy-600">Past generated reports available for immediate re-download.</p>
-          </div>
-          <span className="text-xs font-semibold text-canopy-700 bg-canopy-100 px-3 py-1 rounded-full">
-            {reportHistory.length} Report(s)
-          </span>
+          </form>
         </div>
 
-        {reportHistory.length === 0 && !loading && (
-          <p className="text-sm text-canopy-600 py-10 text-center">
-            No reports generated yet. Use the generator above to create your first report.
-          </p>
-        )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left uppercase text-canopy-600 border-b border-canopy-100 pb-2">
-                <th className="py-3">Report Title</th>
-                <th className="py-3">Template</th>
-                <th className="py-3">Format</th>
-                <th className="py-3">Generated By</th>
-                <th className="py-3">Timestamp</th>
-                <th className="py-3">File Size</th>
-                <th className="py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-canopy-100">
-              {reportHistory.map((r) => {
-                const isPdf = r.file_format === "pdf";
-                return (
-                  <tr key={r.id} className="hover:bg-canopy-50/50">
-                    <td className="py-3 font-semibold text-bark-900">{r.title}</td>
-                    <td className="py-3 uppercase text-canopy-700 text-[11px] font-medium">
-                      {r.report_type.replace("_", " ")}
+        <div className="card">
+          <h3 className="section-title">Report History</h3>
+          <div className="table-container" style={{ maxHeight: 400, overflowY: "auto" }}>
+            <table>
+              <thead><tr><th>Title</th><th>Type / Format</th><th>Created</th><th>Actions</th></tr></thead>
+              <tbody>
+                {history.map(h => (
+                  <tr key={h.id}>
+                    <td className="font-semibold">{h.title}</td>
+                    <td>
+                      <div><span className="badge badge-slate" style={{ fontSize: "0.6rem" }}>{h.report_type.replace(/_/g, " ")}</span></div>
+                      <div className="mt-1"><span className={`badge ${h.file_format === "pdf" ? "badge-rose" : "badge-emerald"}`} style={{ fontSize: "0.6rem" }}>{h.file_format.toUpperCase()}</span></div>
                     </td>
-                    <td className="py-3">
-                      <span
-                        className={`font-bold px-2 py-0.5 rounded-md uppercase text-[10px] ${
-                          isPdf ? "bg-red-100 text-red-800 border border-red-200" : "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                        }`}
-                      >
-                        {r.file_format}
-                      </span>
-                    </td>
-                    <td className="py-3 text-canopy-600">{r.generator_name || "System"}</td>
-                    <td className="py-3 text-canopy-600">{new Date(r.created_at).toLocaleString()}</td>
-                    <td className="py-3 text-canopy-600">{Math.round(r.file_size_bytes / 1024)} KB</td>
-                    <td className="py-3 text-right">
-                      <button
-                        onClick={() => handleDownloadReport(r)}
-                        disabled={downloadingId === r.id}
-                        className="btn-secondary text-xs py-1 px-3 inline-flex items-center gap-1.5"
-                      >
-                        <Download className="w-3.5 h-3.5" />
-                        <span>{downloadingId === r.id ? "Downloading..." : "Download"}</span>
-                      </button>
+                    <td className="font-mono text-xs">{new Date(h.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <button className="btn btn-secondary btn-sm" onClick={() => handleDownload(h.id, `${h.title.replace(/\s+/g, '_')}.${h.file_format === 'pdf' ? 'pdf' : 'xlsx'}`)}>⬇️ Download</button>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* ================= RAW MODULE RECORDS FEED ================= */}
-      <div className="card p-6">
-        <h2 className="font-display font-bold text-bark-900 text-lg mb-1">Live Ingestion Telemetry Feed</h2>
-        <p className="text-xs text-canopy-600 mb-4">
-          Real-time stream of ingested camera trap photos, acoustic audio clips, and uploaded dataset archives.
-        </p>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-left uppercase text-canopy-600 border-b border-canopy-100 pb-2">
-                <th className="py-2.5">Record ID</th>
-                <th className="py-2.5">Timestamp</th>
-                <th className="py-2.5">Source Node / Dataset</th>
-                <th className="py-2.5">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-canopy-100">
-              {records.map((r) => (
-                <tr key={r.record_id + r.timestamp} className="hover:bg-canopy-50/50">
-                  <td className="py-2.5 font-mono font-bold text-bark-900">{r.record_id}</td>
-                  <td className="py-2.5 text-canopy-600">{new Date(r.timestamp).toLocaleString()}</td>
-                  <td className="py-2.5 text-bark-800 font-medium">{r.source}</td>
-                  <td className="py-2.5">
-                    <StatusPill status={r.status} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                ))}
+                {history.length === 0 && <tr><td colSpan={4} className="text-center text-muted p-4">No reports generated yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

@@ -75,9 +75,7 @@ class ActionStatus(str, enum.Enum):
 
 
 class RestorationActionRecord(Base):
-    """
-    Tracks action status of habitat restoration recommendations per site.
-    """
+    """Tracks action status of habitat restoration recommendations per site."""
     __tablename__ = "restoration_action_records"
 
     id = Column(String, primary_key=True, default=_uuid)
@@ -107,9 +105,7 @@ class ReportType(str, enum.Enum):
 
 
 class GeneratedReport(Base):
-    """
-    Persistent registry of generated export reports (PDF / Excel) with metadata and file path.
-    """
+    """Persistent registry of generated export reports (PDF / Excel) with metadata and file path."""
     __tablename__ = "generated_reports"
 
     id = Column(String, primary_key=True, default=_uuid)
@@ -119,7 +115,7 @@ class GeneratedReport(Base):
     file_path = Column(String, nullable=False)
     file_size_bytes = Column(Integer, default=0, nullable=False)
     download_url = Column(String, nullable=False)
-    
+
     filters_json = Column(JSON, nullable=True)
     summary_metrics = Column(JSON, nullable=True)
     generated_by = Column(String, ForeignKey("users.id"), nullable=False)

@@ -27,8 +27,6 @@ class ObservationOut(BaseModel):
         from_attributes = True
 
 
-# ---- Milestone 2: Image-based species detection ----
-
 class BoundingBox(BaseModel):
     x: float
     y: float
@@ -50,8 +48,6 @@ class DetectionResult(BaseModel):
     top_label: str | None = None
     top_confidence: float | None = None
 
-
-# ---- Milestone 3: Bioacoustic species detection ----
 
 class SoundMatch(BaseModel):
     label: str

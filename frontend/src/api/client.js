@@ -17,12 +17,8 @@ function clearTokens() {
 
 let refreshInFlight = null;
 
-/**
- * Exchanges the stored refresh token for a new access token.
- */
 async function refreshAccessToken() {
   if (refreshInFlight) return refreshInFlight;
-
   const refreshToken = getRefreshToken();
   if (!refreshToken) return null;
 
@@ -32,17 +28,12 @@ async function refreshAccessToken() {
     body: JSON.stringify({ refresh_token: refreshToken }),
   })
     .then(async (res) => {
-      if (!res.ok) {
-        clearTokens();
-        return null;
-      }
+      if (!res.ok) { clearTokens(); return null; }
       const data = await res.json();
       localStorage.setItem("wpis_token", data.access_token);
       return data.access_token;
     })
-    .finally(() => {
-      refreshInFlight = null;
-    });
+    .finally(() => { refreshInFlight = null; });
 
   return refreshInFlight;
 }
@@ -60,16 +51,12 @@ async function request(path, { method = "GET", body, auth = true, _retried = fal
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  // Access token expired mid-session -> silently refresh once, then retry.
   if (res.status === 401 && auth && !_retried && getRefreshToken()) {
     const newToken = await refreshAccessToken();
-    if (newToken) {
-      return request(path, { method, body, auth, _retried: true });
-    }
+    if (newToken) return request(path, { method, body, auth, _retried: true });
   }
 
   if (res.status === 204) return null;
-
   const data = await res.json().catch(() => null);
 
   if (!res.ok) {
@@ -86,8 +73,7 @@ export const api = {
     setTokens(data.access_token, data.refresh_token);
     return data;
   },
-  register: (payload) =>
-    request("/auth/register", { method: "POST", body: payload, auth: false }),
+  register: (payload) => request("/auth/register", { method: "POST", body: payload, auth: false }),
   me: () => request("/auth/me"),
   logout: () => clearTokens(),
 
@@ -105,8 +91,7 @@ export const api = {
   listSitesForSurvey: (surveyId) => request(`/surveys/${surveyId}/sites`),
 
   // Observations
-  listObservations: (siteId) =>
-    request(`/observations/${siteId ? `?site_id=${siteId}` : ""}`),
+  listObservations: (siteId) => request(`/observations/${siteId ? `?site_id=${siteId}` : ""}`),
   createObservation: (payload) => request("/observations/", { method: "POST", body: payload }),
 
   // Datasets
@@ -148,10 +133,7 @@ export const api = {
       body: formData,
     });
     const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      const message = data?.detail || `Upload failed with status ${res.status}`;
-      throw new Error(typeof message === "string" ? message : JSON.stringify(message));
-    }
+    if (!res.ok) throw new Error(data?.detail || `Upload failed`);
     return data;
   },
   detectSpecies: (observationId) => request(`/observations/${observationId}/detect`, { method: "POST" }),
@@ -171,50 +153,26 @@ export const api = {
       body: formData,
     });
     const data = await res.json().catch(() => null);
-    if (!res.ok) {
-      const message = data?.detail || `Upload failed with status ${res.status}`;
-      throw new Error(typeof message === "string" ? message : JSON.stringify(message));
-    }
+    if (!res.ok) throw new Error(data?.detail || `Upload failed`);
     return data;
   },
   detectSound: (observationId) => request(`/observations/${observationId}/detect-sound`, { method: "POST" }),
 
   // Population Intelligence
   getPopulationCounts: (surveyId) => request(`/population/counts${surveyId ? `?survey_id=${surveyId}` : ""}`),
-  getPopulationDensity: (surveyId) => request(`/population/density?survey_id=${surveyId}`),
   getPopulationTrend: (species, { surveyId, windowDays = 30 } = {}) =>
-    request(
-      `/population/trend?species=${encodeURIComponent(species)}&window_days=${windowDays}${
-        surveyId ? `&survey_id=${surveyId}` : ""
-      }`
-    ),
-  getPopulationDistribution: (surveyId) =>
-    request(`/population/distribution${surveyId ? `?survey_id=${surveyId}` : ""}`),
-  getPopulationMovement: (species) => request(`/population/movement?species=${encodeURIComponent(species)}`),
+    request(`/population/trend?species=${encodeURIComponent(species)}&window_days=${windowDays}${surveyId ? `&survey_id=${surveyId}` : ""}`),
+  getPopulationDistribution: (surveyId) => request(`/population/distribution${surveyId ? `?survey_id=${surveyId}` : ""}`),
 
   // Habitat Intelligence
   getHabitatClassification: (siteId) => request(`/habitat/sites/${siteId}/classification`),
-  getHabitatDegradation: (siteId, windowDays = 90) =>
-    request(`/habitat/sites/${siteId}/degradation?window_days=${windowDays}`),
-  getHabitatVegetation: (siteId) => request(`/habitat/sites/${siteId}/vegetation`),
-  getHabitatEnvironmental: (siteId) => request(`/habitat/sites/${siteId}/environmental`),
-  getHabitatSuitability: (siteId, species) =>
-    request(`/habitat/sites/${siteId}/suitability?species=${encodeURIComponent(species)}`),
+  getHabitatDegradation: (siteId) => request(`/habitat/sites/${siteId}/degradation`),
 
-  // Conservation Recommendations & Threats
+  // Conservation
   getThreats: () => request("/conservation/threats"),
   getConservationPriorities: () => request("/conservation/priorities"),
-  getConservationRestoration: (siteId) => request(`/conservation/restoration/${siteId}`),
-  updateRestorationStatus: (actionId, { status, notes, assignedTo } = {}) =>
-    request(`/conservation/restoration/${actionId}/status`, {
-      method: "PATCH",
-      body: { status, notes, assigned_to: assignedTo },
-    }),
-  getConservationProtection: (siteId) => request(`/conservation/protection/${siteId}`),
-  getMonitoringOptimization: () => request("/conservation/monitoring-optimization"),
-  getResourceAllocation: () => request("/conservation/resource-allocation"),
 
-  // Ecosystem Health Scoring
+  // Ecosystem Health
   getHealthScore: ({ siteId, surveyId } = {}) => {
     const params = [];
     if (siteId) params.push(`site_id=${siteId}`);
@@ -223,7 +181,7 @@ export const api = {
   },
   getHealthScoreAllSites: () => request("/health/score/all-sites"),
 
-  // Incidents (Field security & conflict logging)
+  // Incidents
   listIncidents: ({ siteId, surveyId, incidentType, severity, status } = {}) => {
     const params = [];
     if (siteId) params.push(`site_id=${siteId}`);
@@ -234,34 +192,18 @@ export const api = {
     return request(`/incidents/${params.length ? `?${params.join("&")}` : ""}`);
   },
   createIncident: (payload) => request("/incidents/", { method: "POST", body: payload }),
-  getIncident: (incidentId) => request(`/incidents/${incidentId}`),
   updateIncident: (incidentId, payload) => request(`/incidents/${incidentId}`, { method: "PATCH", body: payload }),
-  deleteIncident: (incidentId) => request(`/incidents/${incidentId}`, { method: "DELETE" }),
 
-  // GIS Map Visualization Layer
-  getGisSensors: (surveyId) => request(`/gis/sensors${surveyId ? `?survey_id=${surveyId}` : ""}`),
-  getGisSpeciesDistribution: ({ surveyId, species } = {}) => {
-    const params = [];
-    if (surveyId) params.push(`survey_id=${surveyId}`);
-    if (species) params.push(`species=${encodeURIComponent(species)}`);
-    return request(`/gis/species-distribution${params.length ? `?${params.join("&")}` : ""}`);
-  },
-  getGisHabitatZones: () => request("/gis/habitat-zones"),
-  getGisHealthScores: () => request("/gis/health-scores"),
-  getGisMigrationPaths: (species) => request(`/gis/migration-paths${species ? `?species=${encodeURIComponent(species)}` : ""}`),
-  getGisProtectedAreas: () => request("/gis/protected-areas"),
+  // GIS
+  getGisSensors: () => request("/gis/sensors"),
   getGisAllLayers: () => request("/gis/all-layers"),
 
-  // Reports & Export System
+  // Reports
+  getReportSummary: () => request("/reports/summary"),
+  listReportRecords: (limit = 25) => request(`/reports/records?limit=${limit}`),
   getReportTypes: () => request("/reports/types"),
   generateReport: (payload) => request("/reports/generate", { method: "POST", body: payload }),
   listReportHistory: (limit = 50) => request(`/reports/history?limit=${limit}`),
-  getReportSummary: () => request("/reports/summary"),
-  listReportRecords: (limit = 25) => request(`/reports/records?limit=${limit}`),
-  downloadReportUrl: (reportId) => {
-    const token = getToken();
-    return `${API_BASE}/reports/${report_id}/download${token ? `?token=${token}` : ""}`;
-  },
   triggerReportDownload: async (reportId, filename = "report") => {
     const token = getToken();
     const headers = {};
@@ -272,7 +214,6 @@ export const api = {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    // determine filename from Content-Disposition header if available
     const disposition = res.headers.get("content-disposition");
     let fname = filename;
     if (disposition && disposition.includes("filename=")) {
@@ -285,7 +226,7 @@ export const api = {
     document.body.removeChild(a);
   },
 
-  // Admin Platform Analytics & Device Management
+  // Admin
   getPlatformAnalytics: () => request("/admin/analytics"),
   getDeviceManagement: () => request("/admin/devices"),
   adminCreateUser: (payload) => request("/admin/users", { method: "POST", body: payload }),

@@ -1,8 +1,5 @@
-import { Fragment, useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useEffect, useState } from "react";
 import { api } from "../api/client";
-import { StatusBadge } from "../components/Badges";
-import DatasetFilesPanel from "../components/DatasetFilesPanel";
 
 const SOURCES = [
   { value: "snapshot_serengeti", label: "Snapshot Serengeti" },
@@ -13,189 +10,130 @@ const SOURCES = [
   { value: "custom_upload", label: "Custom Upload" },
 ];
 
-const CAN_MANAGE = ["administrator", "researcher"];
-
 export default function DatasetsPage() {
-  const { user } = useAuth();
-  const canManage = CAN_MANAGE.includes(user.role);
-
   const [datasets, setDatasets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: "", source: "custom_upload", purpose: "", record_count: 0 });
   const [error, setError] = useState("");
   const [expandedId, setExpandedId] = useState(null);
-  const [form, setForm] = useState({
-    name: "",
-    source: "snapshot_serengeti",
-    purpose: "",
-    record_count: "",
-  });
+  const [files, setFiles] = useState({});
+  const [uploading, setUploading] = useState(false);
 
-  async function refresh() {
-    setLoading(true);
-    try {
-      setDatasets(await api.listDatasets());
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => { load(); }, []);
+  function load() { api.listDatasets().then(setDatasets).catch(() => {}); }
 
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  async function handleSubmit(e) {
+  async function createDataset(e) {
     e.preventDefault();
     setError("");
     try {
-      await api.createDataset({
-        ...form,
-        record_count: parseInt(form.record_count || "0", 10),
-      });
-      setForm({ name: "", source: "snapshot_serengeti", purpose: "", record_count: "" });
-      refresh();
-    } catch (e) {
-      setError(e.message);
+      await api.createDataset({ ...form, record_count: parseInt(form.record_count, 10) || 0 });
+      setShowForm(false);
+      setForm({ name: "", source: "custom_upload", purpose: "", record_count: 0 });
+      load();
+    } catch (err) { setError(err.message); }
+  }
+
+  async function toggleExpand(id) {
+    if (expandedId === id) { setExpandedId(null); return; }
+    setExpandedId(id);
+    if (!files[id]) {
+      try {
+        const f = await api.listDatasetFiles(id);
+        setFiles((prev) => ({ ...prev, [id]: f }));
+      } catch { setFiles((prev) => ({ ...prev, [id]: [] })); }
     }
   }
 
-  async function handleDelete(id) {
+  async function handleUpload(datasetId, fileList) {
+    if (!fileList.length) return;
+    setUploading(true);
     try {
-      await api.deleteDataset(id);
-      refresh();
-    } catch (e) {
-      setError(e.message);
-    }
+      const uploaded = await api.uploadDatasetFiles(datasetId, fileList);
+      setFiles((prev) => ({ ...prev, [datasetId]: [...(prev[datasetId] || []), ...uploaded] }));
+    } catch (err) { setError(err.message); }
+    setUploading(false);
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-bark-900">Dataset Pipeline</h1>
-        <p className="text-canopy-700 text-sm mt-1">
-          Register external datasets and upload real sample images / audio files against them.
-        </p>
+    <div>
+      <div className="page-header flex items-center justify-between">
+        <div>
+          <h1>📦 Dataset Pipeline</h1>
+          <p>Register, upload, and manage wildlife datasets.</p>
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>+ Register Dataset</button>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-          {error}
+      {error && <div className="auth-error mb-4">{error}</div>}
+
+      {showForm && (
+        <div className="card mb-4">
+          <h3 className="section-title">Register Dataset</h3>
+          <form onSubmit={createDataset} className="grid grid-2">
+            <div className="form-group"><label className="form-label">Name</label><input className="form-input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Source</label>
+              <select className="form-select" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })}>
+                {SOURCES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            </div>
+            <div className="form-group"><label className="form-label">Purpose</label><input className="form-input" value={form.purpose} onChange={(e) => setForm({ ...form, purpose: e.target.value })} /></div>
+            <div className="form-group"><label className="form-label">Record Count</label><input type="number" className="form-input" value={form.record_count} onChange={(e) => setForm({ ...form, record_count: e.target.value })} /></div>
+            <div style={{ gridColumn: "span 2" }}><button type="submit" className="btn btn-primary">Register</button></div>
+          </form>
         </div>
       )}
 
-      {canManage && (
-        <form onSubmit={handleSubmit} className="card p-5 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-          <div>
-            <label className="label">Dataset name</label>
-            <input
-              className="input"
-              required
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            />
-          </div>
-          <div>
-            <label className="label">Source</label>
-            <select
-              className="input"
-              value={form.source}
-              onChange={(e) => setForm((f) => ({ ...f, source: e.target.value }))}
-            >
-              {SOURCES.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="label">Purpose</label>
-            <input
-              className="input"
-              value={form.purpose}
-              onChange={(e) => setForm((f) => ({ ...f, purpose: e.target.value }))}
-              placeholder="e.g. species classification"
-            />
-          </div>
-          <div>
-            <label className="label">Record count</label>
-            <input
-              className="input"
-              type="number"
-              value={form.record_count}
-              onChange={(e) => setForm((f) => ({ ...f, record_count: e.target.value }))}
-            />
-          </div>
-          <div className="md:col-span-4">
-            <button className="btn-primary">Register dataset</button>
-          </div>
-        </form>
-      )}
+      <div className="grid" style={{ gap: "0.75rem" }}>
+        {datasets.map((ds) => (
+          <div key={ds.id} className="card card-compact" style={{ cursor: "pointer" }} onClick={() => toggleExpand(ds.id)}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">{ds.name}</span>
+                  <span className={`badge ${ds.status === "ready" ? "badge-emerald" : ds.status === "failed" ? "badge-rose" : "badge-amber"}`}>{ds.status}</span>
+                </div>
+                <p className="text-xs text-muted mt-1">{ds.purpose || "No description"}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="badge badge-slate">{ds.source?.replace(/_/g, " ")}</span>
+                <span className="font-mono text-sm">{ds.record_count?.toLocaleString()} records</span>
+              </div>
+            </div>
 
-      <div className="card overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-canopy-500 border-b border-canopy-100">
-              <th className="py-2 px-5">Name</th>
-              <th className="py-2">Source</th>
-              <th className="py-2">Purpose</th>
-              <th className="py-2">Records</th>
-              <th className="py-2">Status</th>
-              <th className="py-2 px-5"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-canopy-100">
-            {datasets.map((d) => (
-              <Fragment key={d.id}>
-                <tr
-                  className="cursor-pointer hover:bg-canopy-50"
-                  onClick={() => setExpandedId(expandedId === d.id ? null : d.id)}
-                >
-                  <td className="py-2 px-5 font-medium text-bark-900 flex items-center gap-2">
-                    <span className={`transition-transform ${expandedId === d.id ? "rotate-90" : ""}`}>▸</span>
-                    {d.name}
-                  </td>
-                  <td className="py-2 text-canopy-700 capitalize">{d.source.replace("_", " ")}</td>
-                  <td className="py-2 text-canopy-700">{d.purpose || "—"}</td>
-                  <td className="py-2 text-canopy-700">{d.record_count.toLocaleString()}</td>
-                  <td className="py-2"><StatusBadge status={d.status} /></td>
-                  <td className="py-2 px-5 text-right">
-                    {canManage && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(d.id);
-                        }}
-                        className="text-xs text-red-600 hover:underline"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </td>
-                </tr>
-                {expandedId === d.id && (
-                  <tr>
-                    <td colSpan={6} className="p-0">
-                      <DatasetFilesPanel
-                        datasetId={d.id}
-                        canManage={canManage}
-                        onFilesChanged={refresh}
-                      />
-                    </td>
-                  </tr>
+            {expandedId === ds.id && (
+              <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border-default)", paddingTop: "1rem" }} onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-muted">UPLOADED FILES</span>
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: "pointer" }}>
+                    {uploading ? "Uploading…" : "📎 Upload Files"}
+                    <input type="file" multiple style={{ display: "none" }} onChange={(e) => handleUpload(ds.id, Array.from(e.target.files))} />
+                  </label>
+                </div>
+                {(files[ds.id] || []).length > 0 ? (
+                  <div className="table-container">
+                    <table>
+                      <thead><tr><th>Filename</th><th>Type</th><th>Size</th><th>Uploaded</th></tr></thead>
+                      <tbody>
+                        {files[ds.id].map((f) => (
+                          <tr key={f.id}>
+                            <td className="font-semibold">{f.original_filename}</td>
+                            <td className="text-xs text-muted">{f.content_type}</td>
+                            <td className="font-mono text-xs">{(f.file_size_bytes / 1024).toFixed(1)} KB</td>
+                            <td className="font-mono text-xs">{new Date(f.uploaded_at).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted text-center p-3">No files uploaded yet.</p>
                 )}
-              </Fragment>
-            ))}
-          </tbody>
-        </table>
-        {datasets.length === 0 && !loading && (
-          <p className="text-sm text-canopy-600 py-4 px-5">No datasets registered yet.</p>
-        )}
+              </div>
+            )}
+          </div>
+        ))}
+        {datasets.length === 0 && <div className="empty-state"><div className="empty-icon">📦</div><h3>No Datasets</h3><p>Register your first dataset above.</p></div>}
       </div>
-
-      <p className="text-xs text-canopy-500">
-        Click a dataset row to expand it and upload real sample images/audio files — this actually stores
-        and serves the files, not just metadata.
-      </p>
     </div>
   );
 }

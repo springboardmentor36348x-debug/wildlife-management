@@ -30,77 +30,15 @@ function PublicOnlyRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route
-        path="/login"
-        element={
-          <PublicOnlyRoute>
-            <LoginPage />
-          </PublicOnlyRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicOnlyRoute>
-            <RegisterPage />
-          </PublicOnlyRoute>
-        }
-      />
+      <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
+      <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
 
-      <Route
-        path="/"
-        element={
-          <AuthedLayout>
-            <DashboardPage />
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/surveys"
-        element={
-          <AuthedLayout>
-            <SurveysPage />
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/datasets"
-        element={
-          <AuthedLayout>
-            <RoleRoute roles={["administrator", "researcher"]}>
-              <DatasetsPage />
-            </RoleRoute>
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/species-recognition"
-        element={
-          <AuthedLayout>
-            <RoleRoute roles={["administrator", "researcher", "forest_department"]}>
-              <SpeciesRecognitionPage />
-            </RoleRoute>
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/reports"
-        element={
-          <AuthedLayout>
-            <ReportsPage />
-          </AuthedLayout>
-        }
-      />
-      <Route
-        path="/users"
-        element={
-          <AuthedLayout>
-            <RoleRoute roles={["administrator"]}>
-              <UsersPage />
-            </RoleRoute>
-          </AuthedLayout>
-        }
-      />
+      <Route path="/" element={<AuthedLayout><DashboardPage /></AuthedLayout>} />
+      <Route path="/surveys" element={<AuthedLayout><SurveysPage /></AuthedLayout>} />
+      <Route path="/datasets" element={<AuthedLayout><RoleRoute roles={["administrator", "researcher"]}><DatasetsPage /></RoleRoute></AuthedLayout>} />
+      <Route path="/species-recognition" element={<AuthedLayout><RoleRoute roles={["administrator", "researcher", "forest_department"]}><SpeciesRecognitionPage /></RoleRoute></AuthedLayout>} />
+      <Route path="/reports" element={<AuthedLayout><ReportsPage /></AuthedLayout>} />
+      <Route path="/users" element={<AuthedLayout><RoleRoute roles={["administrator"]}><UsersPage /></RoleRoute></AuthedLayout>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

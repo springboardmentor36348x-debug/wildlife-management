@@ -16,13 +16,10 @@ email-validator==2.1.1
 ultralytics==8.2.103
 
 # Milestone 3 Feature A - Bioacoustic Recognition Engine (pretrained YAMNet, inference only)
-# NOTE: tensorflow-hub's model download needs outbound HTTPS to tfhub.dev /
-# storage.googleapis.com at first use - see MILESTONE3_NOTES.md if that's
-# blocked in your environment (e.g. a locked-down CI/sandbox).
 tensorflow==2.21.0
 tensorflow-hub==0.16.1
 librosa==0.10.2.post1
-setuptools<81  # tensorflow-hub still imports pkg_resources, removed from setuptools>=81
+setuptools<81  # tensorflow-hub still imports pkg_resources
 
 # Milestone 4 - Reports & Export System (PDF & Excel generation)
 reportlab==5.0.1

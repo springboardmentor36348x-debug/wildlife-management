@@ -1,92 +1,102 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
-import { RoleBadge } from "../components/Badges";
+
+const ROLES = ["administrator", "researcher", "conservation_officer", "forest_department"];
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ full_name: "", email: "", password: "", role: "researcher", organization: "" });
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [editUser, setEditUser] = useState(null);
 
-  async function refresh() {
-    setLoading(true);
+  useEffect(() => { load(); }, []);
+  function load() { api.listUsers().then(setUsers).catch(() => {}); }
+
+  async function handleCreate(e) {
+    e.preventDefault();
+    setError("");
     try {
-      setUsers(await api.listUsers());
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+      await api.adminCreateUser(form);
+      setShowForm(false);
+      setForm({ full_name: "", email: "", password: "", role: "researcher", organization: "" });
+      load();
+    } catch (err) { setError(err.message); }
   }
 
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  async function handleDeactivate(id) {
+  async function toggleStatus(u) {
     try {
-      await api.deactivateUser(id);
-      refresh();
-    } catch (e) {
-      setError(e.message);
-    }
+      await api.adminUpdateUser(u.id, { is_active: !u.is_active });
+      load();
+    } catch (err) { alert(err.message); }
+  }
+
+  async function updateRole(u, newRole) {
+    try {
+      await api.adminUpdateUser(u.id, { role: newRole });
+      load();
+    } catch (err) { alert(err.message); }
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-bark-900">User Management</h1>
-        <p className="text-canopy-700 text-sm mt-1">
-          Administer researcher, officer, and forest department accounts.
-        </p>
+    <div>
+      <div className="page-header flex items-center justify-between">
+        <div>
+          <h1>👥 User Management</h1>
+          <p>System administrator control over platform access and roles.</p>
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowForm(!showForm)}>+ Provision User</button>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-          {error}
+      {error && <div className="auth-error mb-4">{error}</div>}
+
+      {showForm && (
+        <div className="card mb-4 border-active" style={{ borderColor: "var(--accent-purple)" }}>
+          <h3 className="section-title">Provision New User</h3>
+          <form onSubmit={handleCreate} className="grid grid-3">
+            <div className="form-group"><label className="form-label">Full Name</label><input className="form-input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Email</label><input type="email" className="form-input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></div>
+            <div className="form-group"><label className="form-label">Password</label><input type="text" className="form-input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} /></div>
+            <div className="form-group"><label className="form-label">Role</label>
+              <select className="form-select" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                {ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
+              </select>
+            </div>
+            <div className="form-group"><label className="form-label">Organization</label><input className="form-input" value={form.organization} onChange={(e) => setForm({ ...form, organization: e.target.value })} /></div>
+            <div className="flex items-end mb-4"><button type="submit" className="btn btn-primary w-full">Create Account</button></div>
+          </form>
         </div>
       )}
 
-      <div className="card p-5">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-wide text-canopy-500 border-b border-canopy-100">
-              <th className="py-2">Name</th>
-              <th className="py-2">Email</th>
-              <th className="py-2">Role</th>
-              <th className="py-2">Organization</th>
-              <th className="py-2">Status</th>
-              <th className="py-2"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-canopy-100">
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td className="py-2 font-medium text-bark-900">{u.full_name}</td>
-                <td className="py-2 text-canopy-700">{u.email}</td>
-                <td className="py-2"><RoleBadge role={u.role} /></td>
-                <td className="py-2 text-canopy-700">{u.organization || "—"}</td>
-                <td className="py-2">
-                  <span className={`badge ${u.is_active ? "badge-ok" : "badge-high"}`}>
-                    {u.is_active ? "Active" : "Deactivated"}
-                  </span>
-                </td>
-                <td className="py-2 text-right">
-                  {u.is_active && (
-                    <button
-                      onClick={() => handleDeactivate(u.id)}
-                      className="text-xs text-red-600 hover:underline"
-                    >
-                      Deactivate
+      <div className="card">
+        <h3 className="section-title">Active Platform Users</h3>
+        <div className="table-container">
+          <table>
+            <thead><tr><th>Name / Email</th><th>Role</th><th>Organization</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.id}>
+                  <td>
+                    <div className="font-semibold">{u.full_name}</div>
+                    <div className="text-xs text-muted">{u.email}</div>
+                  </td>
+                  <td>
+                    <select className="form-select" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem", width: "auto" }} value={u.role} onChange={(e) => updateRole(u, e.target.value)}>
+                      {ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
+                    </select>
+                  </td>
+                  <td className="text-xs">{u.organization || "—"}</td>
+                  <td><span className={`badge ${u.is_active ? "badge-emerald" : "badge-rose"}`}>{u.is_active ? "Active" : "Disabled"}</span></td>
+                  <td>
+                    <button className={`btn btn-sm ${u.is_active ? "btn-danger" : "btn-secondary"}`} onClick={() => toggleStatus(u)}>
+                      {u.is_active ? "Disable" : "Enable"}
                     </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {users.length === 0 && !loading && (
-          <p className="text-sm text-canopy-600 py-4">No users found.</p>
-        )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

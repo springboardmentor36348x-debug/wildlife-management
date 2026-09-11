@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: wildlife-api
+    env: python
+    branch: main
+    rootDir: backend
+    buildCommand: pip install -r requirements-deploy.txt
+    startCommand: uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./wildlife.db
+      - key: SECRET_KEY
+        generateValue: true
+      - key: REFRESH_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "https://wildlife-frontend.onrender.com"
+      - key: PYTHON_VERSION
+        value: 3.11.0
+
+  - type: web
+    name: wildlife-frontend
+    env: static
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: wildlife-api
+          envVarKey: RENDER_EXTERNAL_URL

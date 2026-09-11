@@ -21,7 +21,7 @@ ultralytics>=8.3.0
 # blocked in your environment (e.g. a locked-down CI/sandbox).
 tensorflow==2.21.0
 tensorflow-hub==0.16.1
-librosa==1.0.0 
+librosa==0.10.2
 setuptools<81  # tensorflow-hub still imports pkg_resources, removed from setuptools>=81
 
 # Milestone 4 - Reports & Export System (FR-13): PDF + Excel report generation.

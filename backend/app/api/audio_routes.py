@@ -4,10 +4,12 @@ import os
 
 from app.ai.audio_detector import detect_audio_sound
 
+
 router = APIRouter(
     prefix="/audio",
     tags=["Audio Detection"]
 )
+
 
 UPLOAD_FOLDER = "audio_uploads"
 
@@ -16,10 +18,12 @@ os.makedirs(
     exist_ok=True
 )
 
+
 @router.post("/detect")
 async def detect_audio(
     file: UploadFile = File(...)
 ):
+
     file_path = os.path.join(
         UPLOAD_FOLDER,
         file.filename

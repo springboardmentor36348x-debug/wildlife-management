@@ -95,8 +95,8 @@ function EcosystemHealth() {
           </h1>
 
           <p className="text-slate-400 mt-2 max-w-3xl">
-            Evaluate ecosystem health using the defined biodiversity,
-            population, habitat and environmental factors.
+            Evaluate ecosystem health using biodiversity, population,
+            habitat and environmental factors.
           </p>
 
         </div>
@@ -141,8 +141,9 @@ function EcosystemHealth() {
                   <div className="text-center">
 
                     <p className="text-3xl font-bold text-slate-300">
-                      {data.overall_score !== null
-                        ? data.overall_score
+                      {data.overall_score !== null &&
+                      data.overall_score !== undefined
+                        ? `${data.overall_score}%`
                         : "—"}
                     </p>
 
@@ -161,9 +162,10 @@ function EcosystemHealth() {
                   </h2>
 
                   <p className="text-slate-400 mt-2 max-w-2xl">
-                    {data.overall_score !== null
-                      ? "Overall ecosystem health score calculated from available data."
-                      : "Overall health score is not available because the required ecosystem data is not yet available."}
+                    {data.overall_score !== null &&
+                    data.overall_score !== undefined
+                      ? "Overall ecosystem health score calculated from the available assessment factors."
+                      : "Overall health score is not available because all required assessment factors do not yet have valid data."}
                   </p>
 
                 </div>
@@ -183,11 +185,14 @@ function EcosystemHealth() {
 
                 {factors.map((factor) => {
 
-                  const factorData =
-                    data.factors?.[factor.key];
+                  const factorData = data.factors?.[factor.key];
 
                   const score = factorData?.score;
                   const weight = factorData?.weight;
+
+                  const hasScore =
+                    score !== null &&
+                    score !== undefined;
 
                   return (
                     <div
@@ -195,6 +200,7 @@ function EcosystemHealth() {
                       className={`${factor.bg} ${factor.border} border rounded-2xl p-6`}
                     >
 
+                      {/* Icon and Weight */}
                       <div className="flex items-center justify-between">
 
                         <div
@@ -203,16 +209,26 @@ function EcosystemHealth() {
                           {factor.icon}
                         </div>
 
-                        <span className="text-white font-bold">
-                          {weight}%
-                        </span>
+                        <div className="text-right">
+
+                          <p className="text-xs text-slate-500">
+                            Weight
+                          </p>
+
+                          <span className="text-white font-bold">
+                            {weight}%
+                          </span>
+
+                        </div>
 
                       </div>
 
+                      {/* Title */}
                       <h3 className="text-lg font-bold text-white mt-5">
                         {factor.title}
                       </h3>
 
+                      {/* Current Score */}
                       <div className="mt-4">
 
                         <div className="flex justify-between text-sm">
@@ -221,24 +237,26 @@ function EcosystemHealth() {
                             Current score
                           </span>
 
-                          <span className="text-slate-400">
-                            {score !== null && score !== undefined
-                              ? score
+                          <span className="text-slate-300 font-semibold">
+                            {hasScore
+                              ? `${score}%`
                               : "Not available"}
                           </span>
 
                         </div>
 
+                        {/* Progress Bar */}
                         <div className="w-full h-2 bg-slate-800 rounded-full mt-2 overflow-hidden">
 
                           <div
-                            className={`${factor.color} h-2 rounded-full`}
+                            className={`${factor.color} h-2 rounded-full transition-all duration-700`}
                             style={{
-                              width:
-                                score !== null &&
-                                score !== undefined
-                                  ? `${Math.min(score, 100)}%`
-                                  : "0%",
+                              width: hasScore
+                                ? `${Math.min(
+                                    Math.max(score, 0),
+                                    100
+                                  )}%`
+                                : "0%",
                             }}
                           />
 
@@ -246,10 +264,9 @@ function EcosystemHealth() {
 
                       </div>
 
-                      {/* Species richness is available from current data */}
+                      {/* Species Information */}
                       {factor.key === "species_diversity" &&
                         factorData?.species_richness !== undefined && (
-
                           <div className="mt-4 text-sm text-slate-400">
 
                             Species richness:{" "}
@@ -259,7 +276,19 @@ function EcosystemHealth() {
                             </span>
 
                           </div>
+                        )}
 
+                      {factor.key === "species_diversity" &&
+                        factorData?.total_detections !== undefined && (
+                          <div className="mt-2 text-sm text-slate-400">
+
+                            Total observations:{" "}
+
+                            <span className="text-purple-400 font-bold">
+                              {factorData.total_detections}
+                            </span>
+
+                          </div>
                         )}
 
                     </div>
@@ -270,7 +299,7 @@ function EcosystemHealth() {
 
             </div>
 
-            {/* Information */}
+            {/* Assessment Model */}
             <div className="mt-8 bg-[#111827] border border-white/10 rounded-2xl p-7">
 
               <h2 className="text-xl font-bold text-white">

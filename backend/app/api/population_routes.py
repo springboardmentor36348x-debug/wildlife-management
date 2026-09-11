@@ -6,7 +6,9 @@ from app.services.population_service import (
     get_population_summary,
     search_population_species
 )
-from app.auth.auth import require_roles
+
+import pandas as pd
+from pathlib import Path
 
 
 router = APIRouter(
@@ -17,15 +19,7 @@ router = APIRouter(
 
 @router.get("/summary")
 def population_summary(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(
-        require_roles(
-            "student",
-            "research_officer",
-            "forest_officer",
-            "admin"
-        )
-    )
+    db: Session = Depends(get_db)
 ):
     return get_population_summary(db)
 
@@ -33,33 +27,13 @@ def population_summary(
 @router.get("/species-search")
 def species_search(
     query: str = Query(..., min_length=1),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(
-        require_roles(
-            "student",
-            "research_officer",
-            "forest_officer",
-            "admin"
-        )
-    )
+    db: Session = Depends(get_db)
 ):
     return search_population_species(db, query)
 
 
 @router.get("/locations")
-def population_locations(
-    current_user: dict = Depends(
-        require_roles(
-            "student",
-            "research_officer",
-            "forest_officer",
-            "admin"
-        )
-    )
-):
-
-    import pandas as pd
-    from pathlib import Path
+def population_locations():
 
     project_folder = Path(__file__).resolve().parents[3]
 
@@ -71,16 +45,16 @@ def population_locations(
 
     df = pd.read_csv(dataset_path)
 
-    df = df[
-        [
-            "scientific_name",
-            "common_name",
-            "iconic_taxon_name",
-            "latitude",
-            "longitude",
-            "observed_on"
-        ]
-    ].copy()
+    columns = [
+        "scientific_name",
+        "common_name",
+        "iconic_taxon_name",
+        "latitude",
+        "longitude",
+        "observed_on"
+    ]
+
+    df = df[columns].copy()
 
     df = df.dropna(
         subset=[

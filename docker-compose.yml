@@ -1,0 +1,67 @@
+# Milestone 4 - Final Integration, Testing & Deployment (FR-14):
+# "Deploy platform using Docker and cloud services."
+#
+# Brings up all three pieces the project report's architecture diagram
+# calls for: PostgreSQL, the FastAPI backend, and the React frontend
+# (served by nginx). This is the natural next step referenced in
+# SETUP_GUIDE.md's Docker section - previously only the backend had a
+# Dockerfile; this compose file is what actually wires the full stack
+# together for a one-command deployment.
+#
+# Usage:
+#   docker compose up --build
+#   Frontend: http://localhost:5173   Backend docs: http://localhost:8000/docs
+#
+# First run only, in a second terminal (creates demo users + sample data):
+#   docker compose exec backend python -m app.seed
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wildlife_user
+      POSTGRES_PASSWORD: wildlife_pass
+      POSTGRES_DB: wildlife_db
+    volumes:
+      - wildlife_pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wildlife_user -d wildlife_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://wildlife_user:wildlife_pass@db:5432/wildlife_db
+      SECRET_KEY: change-this-to-a-long-random-string
+      REFRESH_SECRET_KEY: change-this-to-a-different-long-random-string
+      CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+      UPLOAD_DIR: uploads
+    volumes:
+      - wildlife_uploads:/app/uploads
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000/api/v1
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+
+volumes:
+  wildlife_pg_data:
+  wildlife_uploads:

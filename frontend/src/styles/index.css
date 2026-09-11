@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canopy-50 text-bark-900 font-body;
+}
+
+::selection {
+  @apply bg-ochre-400/30;
+}
+
+.badge {
+  @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-wide;
+}
+.badge-high { @apply bg-red-100 text-red-700; }
+.badge-med { @apply bg-ochre-400/20 text-ochre-600; }
+.badge-low { @apply bg-canopy-100 text-canopy-700; }
+.badge-ok { @apply bg-canopy-100 text-canopy-700; }
+
+.card {
+  @apply bg-white border border-canopy-100 rounded-xl shadow-sm;
+}
+
+.btn-primary {
+  @apply bg-canopy-800 hover:bg-canopy-700 text-white font-medium rounded-lg px-4 py-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+.btn-secondary {
+  @apply bg-white border border-canopy-200 hover:bg-canopy-50 text-canopy-800 font-medium rounded-lg px-4 py-2 transition-colors;
+}
+.input {
+  @apply w-full rounded-lg border border-canopy-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-canopy-500 focus:border-transparent;
+}
+.label {
+  @apply block text-xs font-semibold uppercase tracking-wide text-canopy-700 mb-1;
+}
